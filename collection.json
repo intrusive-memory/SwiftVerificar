@@ -1,0 +1,133 @@
+{
+  "name": "SwiftVerificar PDF Validation Packages",
+  "overview": "Native Swift port of veraPDF for PDF/A and PDF/UA validation. Provides industry-standard PDF validation for the Apple ecosystem without Java dependency.",
+  "keywords": ["pdf", "validation", "pdf-a", "pdf-ua", "accessibility", "swift", "verapdf"],
+  "formatVersion": "1.0",
+  "revision": 1,
+  "generatedAt": "2026-02-04T00:00:00Z",
+  "generatedBy": {
+    "name": "Intrusive Memory"
+  },
+  "packages": [
+    {
+      "url": "https://github.com/intrusive-memory/SwiftVerificar-biblioteca.git",
+      "summary": "Main integration library for PDF/A and PDF/UA validation. Swift port of veraPDF-library.",
+      "keywords": ["pdf", "validation", "integration", "verapdf"],
+      "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-biblioteca/blob/main/README.md",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarBiblioteca",
+              "targets": [{ "name": "SwiftVerificarBiblioteca", "moduleName": "SwiftVerificarBiblioteca" }],
+              "products": [{ "name": "SwiftVerificarBiblioteca", "type": { "library": ["automatic"] }, "targets": ["SwiftVerificarBiblioteca"] }],
+              "minimumPlatformVersions": [
+                { "name": "macOS", "version": "14.0" },
+                { "name": "iOS", "version": "17.0" }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/intrusive-memory/SwiftVerificar-parser.git",
+      "summary": "PDF parsing library with tagged PDF structure tree and XMP metadata support. Swift port of veraPDF-parser.",
+      "keywords": ["pdf", "parser", "tagged-pdf", "xmp", "structure-tree"],
+      "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-parser/blob/main/README.md",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarParser",
+              "targets": [{ "name": "SwiftVerificarParser", "moduleName": "SwiftVerificarParser" }],
+              "products": [{ "name": "SwiftVerificarParser", "type": { "library": ["automatic"] }, "targets": ["SwiftVerificarParser"] }],
+              "minimumPlatformVersions": [
+                { "name": "macOS", "version": "14.0" },
+                { "name": "iOS", "version": "17.0" }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/intrusive-memory/SwiftVerificar-validation.git",
+      "summary": "PDF validation engine with rule execution and feature reporting. Swift port of veraPDF-validation.",
+      "keywords": ["pdf", "validation", "rules", "engine"],
+      "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-validation/blob/main/README.md",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarValidation",
+              "targets": [{ "name": "SwiftVerificarValidation", "moduleName": "SwiftVerificarValidation" }],
+              "products": [{ "name": "SwiftVerificarValidation", "type": { "library": ["automatic"] }, "targets": ["SwiftVerificarValidation"] }],
+              "minimumPlatformVersions": [
+                { "name": "macOS", "version": "14.0" },
+                { "name": "iOS", "version": "17.0" }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/intrusive-memory/SwiftVerificar-validation-profiles.git",
+      "summary": "XML validation profiles for PDF/A and PDF/UA standards. Swift port of veraPDF-validation-profiles.",
+      "keywords": ["pdf", "validation", "profiles", "pdf-a", "pdf-ua", "xml"],
+      "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-validation-profiles/blob/main/README.md",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarValidationProfiles",
+              "targets": [{ "name": "SwiftVerificarValidationProfiles", "moduleName": "SwiftVerificarValidationProfiles" }],
+              "products": [{ "name": "SwiftVerificarValidationProfiles", "type": { "library": ["automatic"] }, "targets": ["SwiftVerificarValidationProfiles"] }],
+              "minimumPlatformVersions": [
+                { "name": "macOS", "version": "14.0" },
+                { "name": "iOS", "version": "17.0" }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/intrusive-memory/SwiftVerificar-wcag-algs.git",
+      "summary": "WCAG accessibility algorithms for PDF validation including contrast ratio and structure tree checks. Swift port of veraPDF-wcag-algs.",
+      "keywords": ["pdf", "wcag", "accessibility", "contrast", "a11y"],
+      "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-wcag-algs/blob/main/README.md",
+      "versions": [
+        {
+          "version": "0.1.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarWCAGAlgs",
+              "targets": [{ "name": "SwiftVerificarWCAGAlgs", "moduleName": "SwiftVerificarWCAGAlgs" }],
+              "products": [{ "name": "SwiftVerificarWCAGAlgs", "type": { "library": ["automatic"] }, "targets": ["SwiftVerificarWCAGAlgs"] }],
+              "minimumPlatformVersions": [
+                { "name": "macOS", "version": "14.0" },
+                { "name": "iOS", "version": "17.0" }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        }
+      ]
+    }
+  ]
+}
