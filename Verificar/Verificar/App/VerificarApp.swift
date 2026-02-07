@@ -7,12 +7,15 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import PDFKit
 
 @main
 struct VerificarApp: App {
 
     @State private var documentModel = PDFDocumentModel()
     @State private var isFileImporterPresented = false
+    @State private var isGoToPagePresented = false
+    @State private var goToPageText = ""
 
     /// Tracks the current ContentView for forwarding toggle commands.
     /// NavigationSplitView sidebar visibility and inspector state are owned
@@ -35,14 +38,21 @@ struct VerificarApp: App {
                 .onDrop(of: [UTType.pdf, UTType.fileURL], isTargeted: nil) { providers in
                     handleDrop(providers)
                 }
+                .sheet(isPresented: $isGoToPagePresented) {
+                    goToPageSheet
+                }
         }
         .commands {
+            // MARK: - File Menu
+
             CommandGroup(replacing: .newItem) {
                 Button("Open...") {
                     isFileImporterPresented = true
                 }
                 .keyboardShortcut("o", modifiers: .command)
             }
+
+            // MARK: - View Menu (Zoom)
 
             CommandGroup(after: .sidebar) {
                 Button("Toggle Sidebar") {
@@ -54,8 +64,148 @@ struct VerificarApp: App {
                     toggleInspector?()
                 }
                 .keyboardShortcut("2", modifiers: [.command, .option])
+
+                Divider()
+
+                Button("Zoom In") {
+                    documentModel.zoomIn()
+                }
+                .keyboardShortcut("=", modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Button("Zoom Out") {
+                    documentModel.zoomOut()
+                }
+                .keyboardShortcut("-", modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Button("Actual Size") {
+                    documentModel.zoomToActualSize()
+                }
+                .keyboardShortcut("0", modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Button("Zoom to Fit") {
+                    documentModel.zoomToFit()
+                }
+                .keyboardShortcut("9", modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Button("Zoom to Width") {
+                    documentModel.zoomToWidth()
+                }
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Divider()
+
+                Button("Single Page") {
+                    documentModel.displayMode = .singlePage
+                }
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Button("Continuous") {
+                    documentModel.displayMode = .singlePageContinuous
+                }
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Button("Two-Up") {
+                    documentModel.displayMode = .twoUpContinuous
+                }
+                .disabled(!documentModel.isDocumentLoaded)
+            }
+
+            // MARK: - Edit Menu (Search)
+
+            CommandGroup(after: .textEditing) {
+                Button("Find...") {
+                    documentModel.isSearching = true
+                }
+                .keyboardShortcut("f", modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded)
+            }
+
+            // MARK: - Go Menu (Navigation)
+
+            CommandMenu("Go") {
+                Button("Next Page") {
+                    documentModel.nextPage()
+                }
+                .keyboardShortcut(.rightArrow, modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded || documentModel.currentPageIndex >= documentModel.pageCount - 1)
+
+                Button("Previous Page") {
+                    documentModel.previousPage()
+                }
+                .keyboardShortcut(.leftArrow, modifiers: .command)
+                .disabled(!documentModel.isDocumentLoaded || documentModel.currentPageIndex == 0)
+
+                Divider()
+
+                Button("First Page") {
+                    documentModel.goToPage(0)
+                }
+                .disabled(!documentModel.isDocumentLoaded || documentModel.currentPageIndex == 0)
+
+                Button("Last Page") {
+                    documentModel.goToPage(documentModel.pageCount - 1)
+                }
+                .disabled(!documentModel.isDocumentLoaded || documentModel.currentPageIndex >= documentModel.pageCount - 1)
+
+                Divider()
+
+                Button("Go to Page...") {
+                    goToPageText = ""
+                    isGoToPagePresented = true
+                }
+                .keyboardShortcut("p", modifiers: [.command, .option])
+                .disabled(!documentModel.isDocumentLoaded)
             }
         }
+    }
+
+    // MARK: - Go To Page Sheet
+
+    @ViewBuilder
+    private var goToPageSheet: some View {
+        VStack(spacing: 16) {
+            Text("Go to Page")
+                .font(.headline)
+
+            Text("Enter a page number (1-\(documentModel.pageCount))")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            TextField("Page number", text: $goToPageText)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 120)
+                .onSubmit {
+                    submitGoToPage()
+                }
+
+            HStack {
+                Button("Cancel") {
+                    isGoToPagePresented = false
+                }
+                .keyboardShortcut(.escape, modifiers: [])
+
+                Button("Go") {
+                    submitGoToPage()
+                }
+                .keyboardShortcut(.return, modifiers: [])
+                .disabled(Int(goToPageText) == nil)
+            }
+        }
+        .padding(24)
+        .frame(width: 260)
+    }
+
+    private func submitGoToPage() {
+        if let pageNumber = Int(goToPageText),
+           pageNumber >= 1,
+           pageNumber <= documentModel.pageCount {
+            documentModel.goToPage(pageNumber - 1)
+        }
+        isGoToPagePresented = false
     }
 
     // MARK: - File Handling
@@ -120,7 +270,7 @@ struct VerificarApp: App {
     }
 }
 
-// MARK: - Focused Values for Menu ↔ View Communication
+// MARK: - Focused Values for Menu <-> View Communication
 
 /// A closure that toggles the sidebar visibility.
 struct ToggleSidebarActionKey: FocusedValueKey {

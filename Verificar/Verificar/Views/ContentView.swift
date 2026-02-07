@@ -35,6 +35,9 @@ struct ContentView: View {
                     .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 450)
             }
         }
+        .toolbar {
+            VerificarToolbar(documentModel: documentModel)
+        }
         .frame(minWidth: 800, minHeight: 500)
         .focusedSceneValue(\.toggleSidebarAction, toggleSidebar)
         .focusedSceneValue(\.toggleInspectorAction, toggleInspector)

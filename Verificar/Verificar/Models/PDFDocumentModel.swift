@@ -35,6 +35,33 @@ final class PDFDocumentModel {
     /// The zero-based index of the current page.
     var currentPageIndex: Int = 0
 
+    // MARK: - Zoom
+
+    /// The current zoom level (1.0 = 100%). Clamped to [0.25, 8.0].
+    var zoomLevel: CGFloat = 1.0
+
+    /// When true, the PDF view should auto-scale to fit. Set by zoomToFit/zoomToWidth.
+    var autoScalesEnabled: Bool = true
+
+    /// When true, the PDF view should scale to fit the page width.
+    var fitWidthRequested: Bool = false
+
+    // MARK: - Display Mode
+
+    /// The current PDFView display mode.
+    var displayMode: PDFDisplayMode = .singlePageContinuous
+
+    // MARK: - Search
+
+    /// Whether the search field is active/visible.
+    var isSearching: Bool = false
+
+    /// The current search query text.
+    var searchText: String = ""
+
+    /// Search results found in the document.
+    var searchResults: [PDFSelection] = []
+
     // MARK: - Computed Properties
 
     /// The number of pages in the loaded document, or 0 if no document.
@@ -109,6 +136,11 @@ final class PDFDocumentModel {
         url = nil
         currentPageIndex = 0
         error = nil
+        zoomLevel = 1.0
+        autoScalesEnabled = true
+        fitWidthRequested = false
+        displayMode = .singlePageContinuous
+        clearSearch()
     }
 
     // MARK: - Navigation
@@ -144,6 +176,78 @@ final class PDFDocumentModel {
               let document = pdfDocument else { return }
         let pageIndex = document.index(for: page)
         goToPage(pageIndex)
+    }
+
+    // MARK: - Zoom
+
+    /// The minimum allowed zoom level.
+    static let minZoom: CGFloat = 0.25
+
+    /// The maximum allowed zoom level.
+    static let maxZoom: CGFloat = 8.0
+
+    /// The zoom step used for zoomIn/zoomOut.
+    static let zoomStep: CGFloat = 0.25
+
+    /// Zooms in by one step (0.25).
+    func zoomIn() {
+        autoScalesEnabled = false
+        fitWidthRequested = false
+        setZoom(zoomLevel + Self.zoomStep)
+    }
+
+    /// Zooms out by one step (0.25).
+    func zoomOut() {
+        autoScalesEnabled = false
+        fitWidthRequested = false
+        setZoom(zoomLevel - Self.zoomStep)
+    }
+
+    /// Sets auto-scale mode (fit page).
+    func zoomToFit() {
+        fitWidthRequested = false
+        autoScalesEnabled = true
+    }
+
+    /// Sets zoom to fit the page width.
+    func zoomToWidth() {
+        autoScalesEnabled = false
+        fitWidthRequested = true
+    }
+
+    /// Resets zoom to actual size (100%).
+    func zoomToActualSize() {
+        autoScalesEnabled = false
+        fitWidthRequested = false
+        setZoom(1.0)
+    }
+
+    /// Sets the zoom level, clamped to [minZoom, maxZoom].
+    func setZoom(_ level: CGFloat) {
+        zoomLevel = max(Self.minZoom, min(level, Self.maxZoom))
+    }
+
+    /// The zoom level as a percentage integer (e.g. 125 for 1.25x).
+    var zoomPercentage: Int {
+        Int(round(zoomLevel * 100))
+    }
+
+    // MARK: - Search
+
+    /// Starts or updates a search for the given text.
+    func search(_ text: String) {
+        searchText = text
+        if text.isEmpty {
+            clearSearch()
+        }
+        // Actual searching is performed by PDFView through the representable
+    }
+
+    /// Clears the current search and results.
+    func clearSearch() {
+        searchText = ""
+        searchResults = []
+        isSearching = false
     }
 }
 

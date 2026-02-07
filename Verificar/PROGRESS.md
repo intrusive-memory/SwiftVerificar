@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 6
-- Last commit hash: 3c15264
+- Last completed sprint: 7
+- Last commit hash: 5c6a1f3
 - Build status: passing
-- Total test count: 30 (26 unit tests + 4 UI tests from template)
+- Total test count: 48 (44 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -14,9 +14,10 @@
 - Sprint 4: Three-Column Layout Shell
 - Sprint 5: Page Thumbnails Sidebar
 - Sprint 6: Document Outline Sidebar
+- Sprint 7: Toolbar & Navigation Controls
 
 ## Next Sprint
-- Sprint 7: Toolbar & Navigation Controls
+- Sprint 8: SwiftVerificar Package Dependency & Validation Service
 
 ## Files Created (cumulative)
 ### Sources
@@ -30,6 +31,7 @@
 - Verificar/Models/PDFDocumentModel.swift
 - Verificar/Models/OutlineNode.swift
 - Verificar/Views/Sidebar/OutlineSidebarView.swift
+- Verificar/Views/Toolbar/ToolbarContent.swift
 - Verificar/Utilities/PDFKitExtensions.swift
 - Verificar/Info.plist (updated)
 
@@ -56,6 +58,7 @@
 - VerificarTests/PDFViewRepresentableTests.swift (4 tests)
 - VerificarTests/ThumbnailSidebarTests.swift (5 tests)
 - VerificarTests/OutlineNodeTests.swift (8 tests)
+- VerificarTests/ToolbarTests.swift (18 tests)
 
 ## Notes
 ### Sprint 1
@@ -210,3 +213,44 @@
   - nodesHaveUniqueIds: verifies all nodes get distinct UUIDs
   - hasOutlineFalseWhenNoDocument: verifies PDFDocumentModel.hasOutline/outlineRoot when empty
   - navigateToDestinationUpdatesPage: verifies navigateToDestination updates currentPageIndex
+
+### Sprint 7
+- Created VerificarToolbar (Views/Toolbar/ToolbarContent.swift)
+  - struct VerificarToolbar: ToolbarContent providing full toolbar UI
+  - Navigation group: Back/Forward page buttons, page indicator ("Page 3 of 12"), Go To Page text field
+  - Zoom group: Zoom In (+), Zoom Out (-), zoom percentage display, zoom presets menu (Fit Page, Fit Width, Actual Size, 50%-200%)
+  - View mode group: Segmented control for Single Page / Continuous / Two-Up using ViewModeOption enum
+  - Search group: Toggle search field with inline search, result count display, and clear button
+  - All controls disabled when no document is loaded
+  - ViewModeOption enum: CaseIterable, Identifiable, maps to/from PDFDisplayMode
+- Updated PDFDocumentModel (Models/PDFDocumentModel.swift)
+  - Added zoom properties: zoomLevel (CGFloat, default 1.0), autoScalesEnabled (Bool), fitWidthRequested (Bool)
+  - Added displayMode (PDFDisplayMode, default .singlePageContinuous)
+  - Added search properties: isSearching (Bool), searchText (String), searchResults ([PDFSelection])
+  - Added zoom methods: zoomIn(), zoomOut(), zoomToFit(), zoomToWidth(), zoomToActualSize(), setZoom(_:)
+  - Zoom clamped to [0.25, 8.0] range via static minZoom/maxZoom constants
+  - Zoom step is 0.25 per increment/decrement
+  - Added zoomPercentage computed property (Int, e.g. 125 for 1.25x)
+  - Added search methods: search(_:), clearSearch()
+  - Updated close() to reset all new properties
+- Updated PDFViewRepresentable (Views/PDF/PDFViewRepresentable.swift)
+  - Reacts to displayMode changes on the model
+  - Reacts to zoom level changes: supports autoScalesEnabled, fitWidthRequested, and manual zoom
+  - Observes .PDFViewScaleChanged to sync scale factor back to model
+  - Handles search text changes: uses PDFDocument.findString() for search, highlights results via pdfView.highlightedSelections
+  - Navigates to first search result automatically
+  - isUpdating flag on Coordinator prevents feedback loops between model and view
+- Updated ContentView (Views/ContentView.swift)
+  - Added .toolbar { VerificarToolbar(documentModel:) } to NavigationSplitView
+- Updated VerificarApp (App/VerificarApp.swift)
+  - Added View menu items: Zoom In (Cmd+=), Zoom Out (Cmd+-), Actual Size (Cmd+0), Zoom to Fit (Cmd+9), Zoom to Width
+  - Added View menu items: Single Page, Continuous, Two-Up display mode switching
+  - Added Edit menu item: Find... (Cmd+F) to toggle search
+  - Added Go menu: Next Page (Cmd+Right), Previous Page (Cmd+Left), First Page, Last Page, Go to Page... (Opt+Cmd+P)
+  - Added Go to Page sheet with text input and validation
+- Added 18 unit tests in ToolbarTests using Swift Testing:
+  - Zoom tests: zoomInIncrements, zoomOutDecrements, zoomClampedToMin, zoomClampedToMax, zoomOutDoesNotGoBelowMin, zoomInDoesNotExceedMax, zoomToActualSize, zoomToFitEnablesAutoScales, zoomToWidthSetsFlag, zoomPercentage
+  - Display mode tests: defaultDisplayMode, displayModeChanges
+  - Search tests: searchSetsText, clearSearchResetsState, searchWithEmptyStringClears
+  - Integration tests: closeResetsNewProperties
+  - ViewModeOption tests: viewModeOptionMapping, viewModeOptionFromDisplayMode
