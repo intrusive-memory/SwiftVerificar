@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash
 #
 # generate-collection.sh
 # Queries GitHub API for each SwiftVerificar repo, extracts version/targets/products from
@@ -42,14 +42,20 @@ declare -A KEYWORDS=(
 # Get latest version tag for a repo. Tries releases first, falls back to tags.
 get_latest_version() {
   local repo="$1"
-  local version
+  local version=""
 
-  # Try latest release
-  version=$(gh api "repos/${repo}/releases/latest" --jq '.tag_name' 2>/dev/null || true)
+  # Try latest release (suppress stderr, validate result is a clean version)
+  version=$(gh api "repos/${repo}/releases/latest" --jq '.tag_name // empty' 2>/dev/null || true)
 
-  # Fall back to latest tag
-  if [[ -z "$version" ]]; then
-    version=$(gh api "repos/${repo}/tags" --jq '.[0].name' 2>/dev/null || true)
+  # Fall back to latest tag if no release found
+  if [[ -z "$version" || "$version" == *"message"* || "$version" == "null" ]]; then
+    version=$(gh api "repos/${repo}/tags" --jq '.[0].name // empty' 2>/dev/null || true)
+  fi
+
+  # Validate: version should look like a semver tag
+  if [[ -z "$version" || "$version" == *"message"* || "$version" == "null" ]]; then
+    echo ""
+    return
   fi
 
   # Strip leading 'v' if present
