@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 9
-- Last commit hash: 136b620
+- Last completed sprint: 10
+- Last commit hash: 2192ee3
 - Build status: passing
-- Total test count: 87 (83 unit tests + 4 UI tests from template)
+- Total test count: 101 (97 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -17,9 +17,10 @@
 - Sprint 7: Toolbar & Navigation Controls
 - Sprint 8: SwiftVerificar Package Dependency & Validation Service
 - Sprint 9: Validation Orchestration & State Management
+- Sprint 10: Accessibility Standards Panel
 
 ## Next Sprint
-- Sprint 10: Accessibility Standards Panel
+- Sprint 11: Violations List View
 
 ## Files Created (cumulative)
 ### Sources
@@ -39,6 +40,7 @@
 - Verificar/Models/ValidationState.swift
 - Verificar/ViewModels/DocumentViewModel.swift
 - Verificar/ViewModels/ValidationViewModel.swift
+- Verificar/Views/Inspector/StandardsPanel.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -67,6 +69,7 @@
 - VerificarTests/ToolbarTests.swift (18 tests)
 - VerificarTests/ValidationServiceTests.swift (15 tests)
 - VerificarTests/DocumentViewModelTests.swift (24 tests: 6 DocumentViewModel + 18 ValidationViewModel)
+- VerificarTests/StandardsPanelTests.swift (14 tests)
 
 ## Notes
 ### Sprint 1
@@ -339,3 +342,39 @@
 - Added 24 unit tests in DocumentViewModelTests using Swift Testing:
   - DocumentViewModel (6 tests): initialState, complianceStatusNotValidated, selectViolationNavigates, selectViolationNilPage, openDocumentFailure, openDocumentClearsPreviousState
   - ValidationViewModel (18 tests): filterBySeverityError, filterBySeverityWarning, filterBySeverityInfo, noFilterReturnsAll, searchByMessage, searchByRuleID, searchCaseInsensitive, combinedFilterAndSearch, emptySearchReturnsAll, groupBySeverity, groupByPage, groupByNone, summaryText, summaryTextEmpty, updateViolationsReplacesAndClearsSelection, clearViolationsResetsEverything, groupingModeCases, severityCounts
+
+### Sprint 10
+- Created StandardsPanel (Views/Inspector/StandardsPanel.swift)
+  - Full accessibility standards inspector panel replacing the Sprint 9 inline placeholder
+  - Compliance Badge: large icon (48pt) with compliance status label, profile name, and duration
+  - Summary Bar: horizontal stacked bar (green/red/orange/gray) showing passed/failed/warning/N-A proportions
+    - Legend row with colored circles and counts for each category
+    - GeometryReader-based proportional width calculation
+  - Standards Identification Section: PDF/A, PDF/UA, and WCAG identification derived from selected profile
+    - PDF/A shows profile name when PDF/A profile selected, otherwise "Not declared"
+    - PDF/UA shows profile name when PDF/UA profile selected, otherwise "Not declared"
+    - WCAG shows "Not assessed" (placeholder for future WCAG analysis)
+  - Metadata Section: reads PDFDocument.documentAttributes for Title, Author, Subject, Keywords, Created, Modified, Producer, Creator, PDF Version
+    - Handles [AnyHashable: Any]? dictionary type from PDFKit
+    - Keywords supports both [String] array and String value formats
+    - Dates formatted with .abbreviated date and .shortened time
+    - PDF version from PDFDocument.majorVersion/minorVersion
+    - Text selection enabled on metadata values
+  - Validation Controls: Profile picker (11 profiles) + bordered prominent Validate button
+    - Uses @Bindable for two-way binding to documentViewModel.selectedProfile
+    - Button triggers documentViewModel.revalidate() in a Task
+    - Disabled when no document loaded or validation in progress
+  - State Views: validating (spinner), error (with retry button), no document (placeholder), not validated (placeholder + controls)
+  - Available profiles: PDF/UA-1, PDF/UA-2, PDF/A-1a through PDF/A-4 (11 total)
+  - StandardsPanelHelper enum: testable helper with BadgeState mapping, SummaryStats extraction, and standards identification logic
+  - Full accessibility support with accessibilityLabel and accessibilityElement(children: .combine)
+- Updated InspectorView (Views/Inspector/InspectorView.swift)
+  - Replaced inline standardsTabContent with StandardsPanel() view
+  - Removed old statBadge helper (no longer needed)
+  - Standards tab now delegates entirely to StandardsPanel
+- Added 14 unit tests in StandardsPanelTests using Swift Testing:
+  - Summary computation (3 tests): summaryStatsComputed, summaryStatsZeroTotal, summaryStatsAllPassed
+  - Badge state mapping (5 tests): badgeStateConformant, badgeStateNonConformant, badgeStateUnknown, badgeStateInProgress, badgeStateNotValidated
+  - Standards identification (4 tests): pdfAIdentificationForPDFAProfile, pdfAIdentificationForNonPDFAProfile, pdfUAIdentificationForPDFUAProfile, pdfUAIdentificationForNonPDFUAProfile
+  - Profile list (1 test): availableProfilesContainsExpected (verifies all 11 profiles)
+  - Badge state uniqueness (1 test): badgeStateRawValues (verifies all raw values are distinct)

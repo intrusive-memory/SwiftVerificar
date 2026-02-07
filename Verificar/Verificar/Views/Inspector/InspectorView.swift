@@ -69,7 +69,7 @@ struct InspectorView: View {
     private var tabContent: some View {
         switch selectedTab {
         case .standards:
-            standardsTabContent
+            StandardsPanel()
         case .violations:
             violationsTabContent
         case .structure:
@@ -87,64 +87,6 @@ struct InspectorView: View {
                 subtitle: documentModel.isDocumentLoaded
                     ? "Font, image, and annotation details will appear here."
                     : "Open a PDF to extract features."
-            )
-        }
-    }
-
-    // MARK: - Standards Tab Content
-
-    @ViewBuilder
-    private var standardsTabContent: some View {
-        if validationService.isValidating {
-            tabPlaceholder(
-                icon: "hourglass",
-                title: "Validating...",
-                subtitle: "Checking document against \(documentViewModel.selectedProfile)."
-            )
-        } else if let summary = documentViewModel.validationSummary {
-            // Show a brief summary while we build the full Standards panel in Sprint 10
-            VStack(spacing: 12) {
-                Image(systemName: summary.complianceStatus.icon)
-                    .font(.system(size: 36))
-                    .foregroundStyle(summary.complianceStatus.color)
-
-                Text(summary.complianceStatus.label)
-                    .font(.headline)
-
-                Text("Profile: \(summary.profileName)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                Divider()
-                    .padding(.horizontal)
-
-                HStack(spacing: 16) {
-                    statBadge(count: summary.passedCount, label: "Passed", color: .green)
-                    statBadge(count: summary.failedCount, label: "Failed", color: .red)
-                    statBadge(count: summary.warningCount, label: "Warnings", color: .orange)
-                }
-                .padding(.horizontal)
-
-                Spacer()
-            }
-            .padding(.top, 16)
-        } else if validationService.error != nil {
-            tabPlaceholder(
-                icon: "exclamationmark.triangle",
-                title: "Validation Error",
-                subtitle: "An error occurred during validation. Try again."
-            )
-        } else if !documentModel.isDocumentLoaded {
-            tabPlaceholder(
-                icon: "checkmark.shield",
-                title: "Standards Compliance",
-                subtitle: "Open a PDF to check compliance."
-            )
-        } else {
-            tabPlaceholder(
-                icon: "checkmark.shield",
-                title: "Not Validated",
-                subtitle: "Validation results will appear here."
             )
         }
     }
@@ -224,18 +166,6 @@ struct InspectorView: View {
     }
 
     // MARK: - Helpers
-
-    private func statBadge(count: Int, label: String, color: Color) -> some View {
-        VStack(spacing: 2) {
-            Text("\(count)")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(color)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-    }
 
     private func tabPlaceholder(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: 12) {
