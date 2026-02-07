@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 13
-- Last commit hash: c4d55bc
+- Last completed sprint: 14
+- Last commit hash: 3c0715c
 - Build status: passing
-- Total test count: 148 (144 unit tests + 4 UI tests from template)
+- Total test count: 167 (163 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -21,9 +21,10 @@
 - Sprint 11: Violations List View
 - Sprint 12: Violation Detail View
 - Sprint 13: Structure Tree Visualization
+- Sprint 14: Feature Extraction Panel
 
 ## Next Sprint
-- Sprint 14: Feature Extraction Panel
+- Sprint 15: Violation Highlighting & Report Export
 
 ## Files Created (cumulative)
 ### Sources
@@ -49,6 +50,8 @@
 - Verificar/Views/Inspector/StructureTreeView.swift
 - Verificar/Models/StructureNodeModel.swift
 - Verificar/ViewModels/StructureTreeViewModel.swift
+- Verificar/Views/Inspector/FeaturePanel.swift
+- Verificar/ViewModels/FeatureViewModel.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -81,6 +84,7 @@
 - VerificarTests/ViolationsListViewModelTests.swift (11 tests)
 - VerificarTests/ViolationDetailTests.swift (15 tests)
 - VerificarTests/StructureTreeViewModelTests.swift (21 tests)
+- VerificarTests/FeatureViewModelTests.swift (19 tests)
 
 ## Notes
 ### Sprint 1
@@ -497,3 +501,48 @@
   - Node model (4 tests): nodeIconsAreCorrect, nodeIsHeadingDetection, nodeDisplayLabel, nodeTypeDetection
   - Violation marking (1 test): markViolationsFlags
   - Integration (2 tests): sampleTreeWellFormed, displayedNodeCountMatchesTotal
+
+### Sprint 14
+- Created FeatureViewModel (ViewModels/FeatureViewModel.swift)
+  - @Observable class managing extracted PDF feature data for the Feature panel
+  - Properties: fonts ([FontFeature]), images ([ImageFeature]), colorSpaces ([ColorSpaceFeature]), annotations ([AnnotationFeature]), isExtracting (Bool), hasExtractedFeatures (Bool)
+  - Computed: summary (FeatureSummary with totals and warning counts for each category)
+  - Methods: extractFeatures(from:), extractFeaturesFromDocument(_:), clearFeatures(), updateFeatures(fonts:images:colorSpaces:annotations:)
+  - Extracts fonts via PDFPage.attributedString font attribute enumeration
+  - Extracts annotations via PDFPage.annotations with accessible name detection (fieldName, toolTip)
+  - Color space detection from document content (heuristic, placeholder for real biblioteca extraction)
+- Created Feature Model Types:
+  - FontFeature: Identifiable, Sendable, Equatable with name, type (Type1/TrueType/CID/Type3/OpenType/Unknown), isEmbedded, usedOnPages
+  - ImageFeature: Identifiable, Sendable, Equatable with width, height, colorSpace, hasAltText, pageIndex, dimensionsLabel computed
+  - ColorSpaceFeature: Identifiable, Sendable, Equatable with name, type (DeviceRGB/DeviceCMYK/DeviceGray/ICCBased/CalRGB/CalGray/Lab/Indexed/Separation/DeviceN/Pattern/Unknown), usageCount, isDeviceDependent computed
+  - AnnotationFeature: Identifiable, Sendable, Equatable with type, pageIndex, hasAccessibleName
+  - FeatureSummary: totals and warning counts (nonEmbeddedFontCount, imagesWithoutAltTextCount, deviceDependentColorSpaceCount, annotationsWithoutAccessibleNameCount)
+- Created FeatureExtractionHelper enum:
+  - classifyFontType(_:) heuristic font type classification from name patterns
+  - isFontLikelyEmbedded(_:) checks for subset prefix ("+") pattern
+  - classifyColorSpaceType(_:) maps color space names to typed enum
+  - formatPageList(_:) formats zero-based page indices as 1-based list with truncation for >5 pages
+- Created FeaturePanel (Views/Inspector/FeaturePanel.swift)
+  - Tabbed sub-panel with four tabs: Fonts, Images, Colors, Annotations (FeatureTab enum)
+  - Summary bar at top: total counts per category with warning counts in orange parentheses
+  - Fonts tab: table with Font Name, Type, Embedded (checkmark/xmark), Pages columns
+    - Non-embedded fonts highlighted with orange text and orange background tint
+  - Images tab: table with Dimensions, Color Space, Alt Text (checkmark/xmark), Page columns
+    - Images without alt text highlighted with red background tint
+  - Color Spaces tab: table with Name, Type, Usage Count columns
+    - Device-dependent color spaces highlighted with orange warning icon and tint
+  - Annotations tab: table with Type, Accessible Name (checkmark/xmark), Page columns
+  - Empty state per tab when no items of that type found
+  - Overall empty states: no document, extracting (spinner), not yet extracted (with manual Extract button)
+  - Automatic feature extraction on document load via onAppear and onChange
+  - Full accessibility support with accessibilityLabel on every row
+- Updated InspectorView (Views/Inspector/InspectorView.swift)
+  - Replaced Features tab placeholder with FeaturePanel()
+- Added 19 unit tests in FeatureViewModelTests using Swift Testing:
+  - Initial state (1 test): initialState
+  - Summary statistics (3 tests): summaryComputesCorrectTotals, summaryComputesCorrectWarnings, summaryZeroWhenEmpty
+  - Update & Clear (2 tests): updateFeaturesSetsData, clearFeaturesResetsAll
+  - Feature categorization (3 tests): fontTypeCoverage, colorSpaceDeviceDependency, imageDimensionsLabel
+  - FeatureExtractionHelper (6 tests): classifyFontTypeTrueType, classifyFontTypeType1, classifyFontTypeUnknown, isFontEmbeddedSubsetPrefix, classifyColorSpaceType, formatPageList
+  - Page list formatting (1 test): formatPageListTruncation
+  - FeatureTab enum (2 tests): featureTabCases, featureTabIcons

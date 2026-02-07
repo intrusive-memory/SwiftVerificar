@@ -112,13 +112,7 @@ struct InspectorView: View {
         case .structure:
             StructureTreeView()
         case .features:
-            tabPlaceholder(
-                icon: "doc.text.magnifyingglass",
-                title: "Features",
-                subtitle: documentModel.isDocumentLoaded
-                    ? "Font, image, and annotation details will appear here."
-                    : "Open a PDF to extract features."
-            )
+            FeaturePanel()
         }
     }
 
