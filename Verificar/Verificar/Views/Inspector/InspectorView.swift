@@ -110,13 +110,7 @@ struct InspectorView: View {
         case .violations:
             ViolationsListView()
         case .structure:
-            tabPlaceholder(
-                icon: "list.bullet.rectangle",
-                title: "Structure Tree",
-                subtitle: documentModel.isDocumentLoaded
-                    ? "Structure tree will appear here."
-                    : "Open a PDF to view its structure."
-            )
+            StructureTreeView()
         case .features:
             tabPlaceholder(
                 icon: "doc.text.magnifyingglass",

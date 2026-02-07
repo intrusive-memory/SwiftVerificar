@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 12
-- Last commit hash: 3e45b56
+- Last completed sprint: 13
+- Last commit hash: c4d55bc
 - Build status: passing
-- Total test count: 127 (123 unit tests + 4 UI tests from template)
+- Total test count: 148 (144 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -20,9 +20,10 @@
 - Sprint 10: Accessibility Standards Panel
 - Sprint 11: Violations List View
 - Sprint 12: Violation Detail View
+- Sprint 13: Structure Tree Visualization
 
 ## Next Sprint
-- Sprint 13: Structure Tree Visualization
+- Sprint 14: Feature Extraction Panel
 
 ## Files Created (cumulative)
 ### Sources
@@ -45,6 +46,9 @@
 - Verificar/Views/Inspector/StandardsPanel.swift
 - Verificar/Views/Inspector/ViolationsListView.swift
 - Verificar/Views/Inspector/ViolationDetailView.swift
+- Verificar/Views/Inspector/StructureTreeView.swift
+- Verificar/Models/StructureNodeModel.swift
+- Verificar/ViewModels/StructureTreeViewModel.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -76,6 +80,7 @@
 - VerificarTests/StandardsPanelTests.swift (14 tests)
 - VerificarTests/ViolationsListViewModelTests.swift (11 tests)
 - VerificarTests/ViolationDetailTests.swift (15 tests)
+- VerificarTests/StructureTreeViewModelTests.swift (21 tests)
 
 ## Notes
 ### Sprint 1
@@ -452,3 +457,43 @@
   - Remediation text generation (4 tests): formatRemediationWithWCAG, formatRemediationNilWhenNoRemediation, formatRemediationWithoutWCAG, formatRemediationWithUnknownCriterion
   - Location formatting (4 tests): formatLocationFull, formatLocationPageOnly, formatLocationNoPage, formatLocationObjectTypeNoPage
   - WCAG criterion map coverage (2 tests): wcagCriterionMapCount, wcagCriterionMapValuesNonEmpty
+
+### Sprint 13
+- Created StructureNodeModel (Models/StructureNodeModel.swift)
+  - struct StructureNodeModel: Identifiable, Sendable, Equatable for UI-friendly structure tree nodes
+  - Properties: id (String), type (String), title (String?), altText (String?), language (String?), children ([StructureNodeModel]), pageIndex (Int?), hasViolation (Bool)
+  - Computed: icon (SF Symbol name), displayLabel (title or altText or type), isHeading, isFigure, isTable, isList
+  - Static iconForType(_:) maps 30+ PDF structure element types to SF Symbols (headings H1-H6, grouping, block-level, table, list, inline elements)
+  - StructureNodeStatistics: totalElements, headingCount, figureCount, tableCount, listCount, paragraphCount, linkCount, typeCounts dictionary
+  - StructureTreeBuilder enum: computeStatistics(for:), filterNodes(_:matching:), makeSampleTree()
+  - filterNodes uses recursive tree walk: parent included if child matches, case-insensitive matching on type/title/altText
+- Created StructureTreeViewModel (ViewModels/StructureTreeViewModel.swift)
+  - @Observable class managing structure tree display, search, selection, and statistics
+  - Properties: rootNodes ([StructureNodeModel]), selectedNode (StructureNodeModel?), searchText (String)
+  - Computed: displayNodes (filtered by search), statistics (StructureNodeStatistics), hasStructureTree, isSearching, displayedNodeCount
+  - Methods: updateTree(_:), clearTree(), selectNode(_:), markViolations(from:)
+  - markViolations cross-references ViolationItem page indices and object types with tree nodes
+- Created StructureTreeView (Views/Inspector/StructureTreeView.swift)
+  - Recursive tree display using LazyVStack with nested StructureNodeRow views
+  - StructureNodeRow: expandable/collapsible for parent nodes, shows icon + type (monospaced) + title/altText + page badge + violation indicator
+  - Depth-based indentation (16pt per level) with disclosure chevrons for parent nodes
+  - Selected node highlighted with accent color background
+  - Click node navigates PDF via documentModel.goToPage(_:)
+  - Search bar: filter tree nodes by type or content with clear button
+  - Info bar: scrollable stat badges showing Total, Headings, Figures, Tables, Lists counts
+  - Color coding: nodes with violations shown in red (icon, type label, exclamation triangle badge)
+  - Empty state: "No structure tree found -- this PDF is not tagged" with orange warning icon
+  - No-document state: "Open a PDF to view its structure tree"
+  - No-matches state: magnifying glass when search yields no results
+  - Full accessibility support with accessibilityLabel on every interactive element
+  - Loads structure from validation results on appear and on document change
+- Updated InspectorView (Views/Inspector/InspectorView.swift)
+  - Replaced Structure tab placeholder with StructureTreeView()
+- Added 21 unit tests in StructureTreeViewModelTests using Swift Testing:
+  - Tree building (3 tests): updateTreeSetsRootNodes, clearTreeRemovesAll, hasStructureTreeReflectsPresence
+  - Statistics (3 tests): statisticsComputeCorrectCounts, statisticsTypeCountsAreCorrect, emptyTreeStatisticsZero
+  - Search filtering (6 tests): searchFiltersByType, searchFiltersByTitle, searchFiltersByAltText, emptySearchReturnsAll, searchNoMatchesReturnsEmpty, searchIsCaseInsensitive
+  - Node selection (2 tests): selectNodeSetsSelection, selectNodeNilDeselects
+  - Node model (4 tests): nodeIconsAreCorrect, nodeIsHeadingDetection, nodeDisplayLabel, nodeTypeDetection
+  - Violation marking (1 test): markViolationsFlags
+  - Integration (2 tests): sampleTreeWellFormed, displayedNodeCountMatchesTotal
