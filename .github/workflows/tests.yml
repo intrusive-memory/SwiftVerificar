@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main, development]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-macos:
+    name: Test on macOS
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme Verificar \
+            -destination 'platform=macOS' \
+            -project Verificar/Verificar.xcodeproj
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -scheme Verificar \
+            -destination 'platform=macOS' \
+            -project Verificar/Verificar.xcodeproj

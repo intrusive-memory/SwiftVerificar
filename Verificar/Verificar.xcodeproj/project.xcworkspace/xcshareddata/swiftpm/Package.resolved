@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/intrusive-memory/SwiftVerificar-biblioteca.git",
       "state" : {
-        "revision" : "e876d156ab4ebcb323b2a2e28a0d166290cd07ab",
-        "version" : "0.1.0"
+        "revision" : "4471266cd4e7b4768f1905f4579e498915f32868",
+        "version" : "0.2.0"
       }
     },
     {

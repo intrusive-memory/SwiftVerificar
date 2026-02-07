@@ -1,0 +1,20 @@
+.DS_Store
+xcuserdata/
+DerivedData/
+.swiftpm/
+.build/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Sibling package repos (separate git repos)
+SwiftVerificar-biblioteca/
+SwiftVerificar-parser/
+SwiftVerificar-validation/
+SwiftVerificar-validation-profiles/
+SwiftVerificar-wcag-algs/
+
+# Sprint planning artifacts
+EXECUTION_PLAN.md
+SUPERVISOR_STATE.md
+PROGRESS.md
+TODO.md
