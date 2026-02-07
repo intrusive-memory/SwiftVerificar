@@ -48,31 +48,8 @@ struct SidebarView: View {
         case .thumbnails:
             ThumbnailSidebarView()
         case .outline:
-            outlinePlaceholder
+            OutlineSidebarView()
         }
-    }
-
-    private var outlinePlaceholder: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "list.bullet.indent")
-                .font(.system(size: 36))
-                .foregroundStyle(.secondary)
-
-            Text("Document Outline")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-
-            if documentModel.isDocumentLoaded {
-                Text("Outline will appear here.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            } else {
-                Text("Open a PDF to view its outline.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

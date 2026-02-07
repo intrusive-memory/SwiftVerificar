@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 5
-- Last commit hash: 1a2abe9
+- Last completed sprint: 6
+- Last commit hash: 3c15264
 - Build status: passing
-- Total test count: 22 (18 unit tests + 4 UI tests from template)
+- Total test count: 30 (26 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -13,9 +13,10 @@
 - Sprint 3: PDFKit View Integration & Basic Rendering
 - Sprint 4: Three-Column Layout Shell
 - Sprint 5: Page Thumbnails Sidebar
+- Sprint 6: Document Outline Sidebar
 
 ## Next Sprint
-- Sprint 6: Document Outline Sidebar
+- Sprint 7: Toolbar & Navigation Controls
 
 ## Files Created (cumulative)
 ### Sources
@@ -27,6 +28,8 @@
 - Verificar/Views/Sidebar/ThumbnailSidebarView.swift
 - Verificar/Views/Inspector/InspectorView.swift
 - Verificar/Models/PDFDocumentModel.swift
+- Verificar/Models/OutlineNode.swift
+- Verificar/Views/Sidebar/OutlineSidebarView.swift
 - Verificar/Utilities/PDFKitExtensions.swift
 - Verificar/Info.plist (updated)
 
@@ -52,6 +55,7 @@
 - VerificarTests/PDFDocumentModelTests.swift (8 tests)
 - VerificarTests/PDFViewRepresentableTests.swift (4 tests)
 - VerificarTests/ThumbnailSidebarTests.swift (5 tests)
+- VerificarTests/OutlineNodeTests.swift (8 tests)
 
 ## Notes
 ### Sprint 1
@@ -173,3 +177,36 @@
   - indexedPagesReturnsCorrectPairs: verifies index-page tuples have correct indices
   - pageSelectionUpdatesModel: verifies goToPage updates currentPageIndex and clamps out-of-bounds values
   - emptyDocumentThumbnail: verifies empty document produces empty allPages and indexedPages arrays
+
+### Sprint 6
+- Created OutlineNode (Models/OutlineNode.swift)
+  - struct OutlineNode: Identifiable wrapping PDFOutline data
+  - Properties: id (UUID), label (String), destination (PDFDestination?), children ([OutlineNode])
+  - Static buildTree(from:) converts PDFOutline root into [OutlineNode] array
+  - Private buildNode(from:) recursively converts each PDFOutline node
+  - Handles nil and empty-string labels gracefully (falls back to "Untitled")
+    - PDFOutline.label can return empty string instead of nil depending on framework state
+- Created OutlineSidebarView (Views/Sidebar/OutlineSidebarView.swift)
+  - Displays document outline as collapsible tree using DisclosureGroup
+  - OutlineNodeRow renders each node: leaf nodes as clickable buttons, parent nodes as DisclosureGroups
+  - First-level nodes expanded by default (isExpanded initialized to true)
+  - Click navigates to outline destination via documentModel.navigateToDestination(_:)
+  - Each node shows doc.text icon + label text with 2-line truncation
+  - Three states: no document loaded, document with no outline, document with outline
+  - Full accessibility support with accessibilityLabel on each node
+- Updated SidebarView (Views/Sidebar/SidebarView.swift)
+  - Replaced outlinePlaceholder with OutlineSidebarView() in the Outline tab
+  - OutlineSidebarView handles its own empty states
+- Updated PDFDocumentModel (Models/PDFDocumentModel.swift)
+  - Added outlineRoot computed property: PDFOutline? from pdfDocument?.outlineRoot
+  - Added hasOutline computed property: checks if outlineRoot has children
+  - Added navigateToDestination(_:) method: extracts page from PDFDestination, gets its index, calls goToPage(_:)
+- Added 8 unit tests in OutlineNodeTests using Swift Testing:
+  - buildTreeCreatesNodes: verifies top-level children are converted to OutlineNode array
+  - buildTreeHandlesNestedChildren: verifies recursive tree building 3 levels deep
+  - buildTreeEmptyOutline: verifies empty root produces empty array
+  - buildTreeNilLabel: verifies nil/empty label falls back to "Untitled"
+  - nodePreservesDestination: verifies PDFDestination is preserved through conversion
+  - nodesHaveUniqueIds: verifies all nodes get distinct UUIDs
+  - hasOutlineFalseWhenNoDocument: verifies PDFDocumentModel.hasOutline/outlineRoot when empty
+  - navigateToDestinationUpdatesPage: verifies navigateToDestination updates currentPageIndex

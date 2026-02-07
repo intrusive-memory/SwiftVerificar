@@ -66,6 +66,19 @@ final class PDFDocumentModel {
         pdfDocument != nil
     }
 
+    /// The root outline (table of contents) of the loaded PDF document, or nil.
+    var outlineRoot: PDFOutline? {
+        pdfDocument?.outlineRoot
+    }
+
+    /// Whether the loaded document has a non-empty outline.
+    var hasOutline: Bool {
+        if let root = outlineRoot {
+            return root.numberOfChildren > 0
+        }
+        return false
+    }
+
     // MARK: - Document Operations
 
     /// Opens a PDF document from the given file URL.
@@ -117,6 +130,20 @@ final class PDFDocumentModel {
     /// Goes back to the previous page, if available.
     func previousPage() {
         goToPage(currentPageIndex - 1)
+    }
+
+    /// Navigates to a `PDFDestination`, updating `currentPageIndex` to match.
+    ///
+    /// If the destination's page belongs to the loaded document, the current
+    /// page index is updated. The `PDFViewRepresentable` reacts to this change
+    /// and scrolls the PDF view accordingly.
+    ///
+    /// - Parameter destination: The `PDFDestination` to navigate to.
+    func navigateToDestination(_ destination: PDFDestination) {
+        guard let page = destination.page,
+              let document = pdfDocument else { return }
+        let pageIndex = document.index(for: page)
+        goToPage(pageIndex)
     }
 }
 
