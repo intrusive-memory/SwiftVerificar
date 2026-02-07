@@ -9,16 +9,29 @@ import SwiftUI
 
 /// Container view that wraps `PDFViewRepresentable` and provides
 /// loading and empty-state overlays.
+///
+/// Passes violation data and highlight state through to the PDF representable
+/// so that violation annotations can be overlaid on the PDF view.
 struct PDFRenderView: View {
 
     @Bindable var documentModel: PDFDocumentModel
+    var violations: [ViolationItem] = []
+    var showViolationHighlights: Bool = false
+    var selectedViolationID: String? = nil
+    var onAnnotationClicked: ((ViolationItem) -> Void)? = nil
 
     var body: some View {
         ZStack {
             if documentModel.isLoading {
                 loadingOverlay
             } else if documentModel.isDocumentLoaded {
-                PDFViewRepresentable(documentModel: documentModel)
+                PDFViewRepresentable(
+                    documentModel: documentModel,
+                    violations: violations,
+                    showViolationHighlights: showViolationHighlights,
+                    selectedViolationID: selectedViolationID,
+                    onAnnotationClicked: onAnnotationClicked
+                )
             } else {
                 noDocumentOverlay
             }

@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 14
-- Last commit hash: 3c0715c
+- Last completed sprint: 15
+- Last commit hash: 86be5d7
 - Build status: passing
-- Total test count: 167 (163 unit tests + 4 UI tests from template)
+- Total test count: 186 (182 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -22,9 +22,10 @@
 - Sprint 12: Violation Detail View
 - Sprint 13: Structure Tree Visualization
 - Sprint 14: Feature Extraction Panel
+- Sprint 15: Violation Highlighting & Report Export
 
 ## Next Sprint
-- Sprint 15: Violation Highlighting & Report Export
+- Sprint 16: Settings, Polish & Final Tests
 
 ## Files Created (cumulative)
 ### Sources
@@ -52,6 +53,8 @@
 - Verificar/ViewModels/StructureTreeViewModel.swift
 - Verificar/Views/Inspector/FeaturePanel.swift
 - Verificar/ViewModels/FeatureViewModel.swift
+- Verificar/Views/PDF/ViolationAnnotation.swift
+- Verificar/Services/ReportExporter.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -85,6 +88,7 @@
 - VerificarTests/ViolationDetailTests.swift (15 tests)
 - VerificarTests/StructureTreeViewModelTests.swift (21 tests)
 - VerificarTests/FeatureViewModelTests.swift (19 tests)
+- VerificarTests/ReportExporterTests.swift (19 tests)
 
 ## Notes
 ### Sprint 1
@@ -546,3 +550,82 @@
   - FeatureExtractionHelper (6 tests): classifyFontTypeTrueType, classifyFontTypeType1, classifyFontTypeUnknown, isFontEmbeddedSubsetPrefix, classifyColorSpaceType, formatPageList
   - Page list formatting (1 test): formatPageListTruncation
   - FeatureTab enum (2 tests): featureTabCases, featureTabIcons
+
+### Sprint 15
+- Created ViolationAnnotation (Views/PDF/ViolationAnnotation.swift)
+  - Custom PDFAnnotation subclass for violation markers on PDF pages
+  - Color-coded by severity: red (NSColor.systemRed) for errors, yellow (NSColor.systemYellow) for warnings, blue (NSColor.systemBlue) for info
+  - Square annotation type with 2pt solid border and 10% alpha interior fill
+  - Override toolTip getter to show multi-line tooltip with severity, rule ID, message, and WCAG criterion
+  - Static annotationColor(for:) maps ViolationSeverity to NSColor
+  - Static tooltipText(for:) builds tooltip string from ViolationItem fields
+  - Static defaultBounds(for:on:) computes marker position in page upper-right area
+    - Uses violation ID hash to offset markers vertically to prevent overlap
+  - shouldPrint = false so annotations don't appear in printed output
+- Created ReportExporter (Services/ReportExporter.swift)
+  - struct ReportExporter with three export format methods
+  - exportJSON(summary:violations:documentTitle:) -> Data
+    - Uses JSONReport Codable model with Summary and Violation nested structs
+    - Pretty-printed with sorted keys
+    - Page numbers converted from 0-based pageIndex to 1-based for output
+    - ISO 8601 timestamp in generatedAt field
+  - exportHTML(summary:violations:documentTitle:) -> String
+    - Full HTML5 document with inline CSS styles
+    - Summary table with document info, profile, status, counts, pass rate, duration
+    - Color-coded severity badges (red/yellow/blue)
+    - Context blocks in monospaced font, remediation in green-tinted background
+    - Conformant/Non-conformant status with appropriate color
+    - Escapes HTML special characters via escapeHTML(_:)
+    - "No violations found" message when violations array is empty
+  - exportText(summary:violations:documentTitle:) -> String
+    - Fixed-width separator lines for clear section breaks
+    - Numbered violation list with severity tags, locations, WCAG references
+    - Conformant/Non-conformant status text
+  - Static saveToFile(data:defaultName:fileType:) presents NSSavePanel
+    - Supports JSON, HTML, and plainText UTTypes
+  - JSONReport: Codable, Sendable model for structured JSON output
+    - Nested Summary and Violation structs with all relevant fields
+- Updated PDFViewRepresentable (Views/PDF/PDFViewRepresentable.swift)
+  - Added violations, showViolationHighlights, selectedViolationID, onAnnotationClicked parameters (all with defaults)
+  - updateViolationAnnotations(pdfView:coordinator:) method:
+    - Compares current annotation IDs with violation IDs to detect changes
+    - Removes existing ViolationAnnotation instances from pages
+    - Re-adds annotations when showViolationHighlights is true
+    - Creates ViolationAnnotation for each violation with a valid pageIndex
+  - scrollToViolationAnnotation(_:in:coordinator:) scrolls to selected violation
+    - Creates PDFDestination at annotation center point
+    - Navigates PDFView to that destination
+  - Coordinator additions:
+    - currentAnnotations: [ViolationAnnotation] tracks active annotations
+    - lastShowHighlights: Bool tracks highlight toggle state
+    - lastSelectedViolationID: String? prevents redundant scroll operations
+    - annotationClicked(_:) handles .PDFViewAnnotationHit notification
+      - Extracts ViolationAnnotation from notification userInfo
+      - Calls onAnnotationClicked closure to propagate to parent
+  - makeNSView now observes .PDFViewAnnotationHit notification
+- Updated PDFRenderView (Views/PDF/PDFRenderView.swift)
+  - Added violations, showViolationHighlights, selectedViolationID, onAnnotationClicked parameters (all with defaults)
+  - Passes all parameters through to PDFViewRepresentable
+- Updated ContentView (Views/ContentView.swift)
+  - Passes documentViewModel.violations, showViolationHighlights, selectedViolationID, and onAnnotationClicked to PDFRenderView
+  - Bidirectional navigation: list-to-PDF via selectViolation, PDF-to-list via handleAnnotationClicked
+- Updated DocumentViewModel (ViewModels/DocumentViewModel.swift)
+  - Added showViolationHighlights (Bool, default true) for toggle control
+  - Added handleAnnotationClicked(_:) sets selectedViolation on validationViewModel
+  - Added exportJSON() -> Data? convenience method
+  - Added exportHTML() -> String? convenience method
+  - Added exportText() -> String? convenience method
+  - All export methods return nil when no validationSummary is available
+- Updated VerificarApp (App/VerificarApp.swift)
+  - Added File > Export Report submenu with JSON, HTML, Text options
+    - Each uses NSSavePanel via ReportExporter.saveToFile
+    - Disabled when no validation results available or no document loaded
+  - Added View > "Show/Hide Violation Highlights" toggle (Cmd+Shift+H)
+    - Label dynamically reflects current state
+    - Disabled when no document loaded
+- Added 19 unit tests in ReportExporterTests using Swift Testing:
+  - JSON export (4 tests): jsonExportProducesValidData, jsonExportContainsExpectedStructure, jsonExportViolationFields, jsonExportNilPageIndex
+  - HTML export (4 tests): htmlExportContainsExpectedSections, htmlExportContainsViolationDetails, htmlExportEscapesSpecialChars, htmlExportNoViolations
+  - Text export (3 tests): textExportFormatting, textExportNumberedViolations, textExportNoViolations
+  - ViolationAnnotation (3 tests): annotationColorMapping, tooltipTextContainsDetails, tooltipOmitsNilWCAG
+  - DocumentViewModel export (5 tests): exportJSONNilWhenNoResults, exportHTMLNilWhenNoResults, exportTextNilWhenNoResults, showHighlightsDefault, handleAnnotationClickedSetsSelection

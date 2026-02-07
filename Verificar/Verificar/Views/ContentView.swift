@@ -32,8 +32,16 @@ struct ContentView: View {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 300)
         } content: {
-            PDFRenderView(documentModel: documentModel)
-                .frame(minWidth: 400)
+            PDFRenderView(
+                documentModel: documentModel,
+                violations: documentViewModel.violations,
+                showViolationHighlights: documentViewModel.showViolationHighlights,
+                selectedViolationID: documentViewModel.validationViewModel.selectedViolation?.id,
+                onAnnotationClicked: { violation in
+                    documentViewModel.handleAnnotationClicked(violation)
+                }
+            )
+            .frame(minWidth: 400)
         } detail: {
             if isInspectorPresented {
                 InspectorView()

@@ -14,10 +14,16 @@ import PDFKit
 /// and uses a Coordinator to observe page-change notifications so the model's
 /// `currentPageIndex` stays in sync with user scrolling.
 ///
-/// Reacts to zoom level, display mode, and search text changes on the model.
+/// Reacts to zoom level, display mode, search text changes, and violation
+/// annotations on the model. Violation annotations are added/removed when
+/// validation results change and can be toggled on/off via `showViolationHighlights`.
 struct PDFViewRepresentable: NSViewRepresentable {
 
     @Bindable var documentModel: PDFDocumentModel
+    var violations: [ViolationItem] = []
+    var showViolationHighlights: Bool = false
+    var selectedViolationID: String? = nil
+    var onAnnotationClicked: ((ViolationItem) -> Void)? = nil
 
     // MARK: - NSViewRepresentable
 
@@ -41,6 +47,14 @@ struct PDFViewRepresentable: NSViewRepresentable {
             context.coordinator,
             selector: #selector(Coordinator.scaleChanged(_:)),
             name: .PDFViewScaleChanged,
+            object: pdfView
+        )
+
+        // Listen for annotation hit notifications for violation click-to-select.
+        NotificationCenter.default.addObserver(
+            context.coordinator,
+            selector: #selector(Coordinator.annotationClicked(_:)),
+            name: .PDFViewAnnotationHit,
             object: pdfView
         )
 
@@ -121,6 +135,79 @@ struct PDFViewRepresentable: NSViewRepresentable {
                 }
             }
         }
+
+        // Handle violation annotation updates.
+        updateViolationAnnotations(pdfView: pdfView, coordinator: coordinator)
+
+        // Handle selected violation scrolling.
+        if let selectedID = selectedViolationID,
+           selectedID != coordinator.lastSelectedViolationID {
+            coordinator.lastSelectedViolationID = selectedID
+            scrollToViolationAnnotation(selectedID, in: pdfView, coordinator: coordinator)
+        } else if selectedViolationID == nil {
+            coordinator.lastSelectedViolationID = nil
+        }
+    }
+
+    // MARK: - Violation Annotations
+
+    /// Updates violation annotations on the PDF document pages.
+    ///
+    /// Removes existing violation annotations and re-adds them if
+    /// `showViolationHighlights` is enabled and there are violations.
+    private func updateViolationAnnotations(pdfView: PDFView, coordinator: Coordinator) {
+        guard let document = pdfView.document else {
+            coordinator.currentAnnotations = []
+            return
+        }
+
+        // Check if violations or highlight toggle changed.
+        let violationIDs = Set(violations.map(\.id))
+        let existingIDs = Set(coordinator.currentAnnotations.map(\.violationItem.id))
+
+        let needsUpdate = violationIDs != existingIDs
+            || coordinator.lastShowHighlights != showViolationHighlights
+
+        guard needsUpdate else { return }
+        coordinator.lastShowHighlights = showViolationHighlights
+
+        // Remove existing violation annotations.
+        for annotation in coordinator.currentAnnotations {
+            annotation.page?.removeAnnotation(annotation)
+        }
+        coordinator.currentAnnotations = []
+
+        // Add new annotations if highlights are enabled.
+        guard showViolationHighlights else { return }
+
+        for violation in violations {
+            guard let pageIndex = violation.pageIndex,
+                  let page = document.page(at: pageIndex) else { continue }
+
+            let bounds = ViolationAnnotation.defaultBounds(for: violation, on: page)
+            let annotation = ViolationAnnotation(violation: violation, bounds: bounds, page: page)
+            page.addAnnotation(annotation)
+            coordinator.currentAnnotations.append(annotation)
+        }
+    }
+
+    /// Scrolls the PDF view to the annotation matching the given violation ID.
+    private func scrollToViolationAnnotation(
+        _ violationID: String,
+        in pdfView: PDFView,
+        coordinator: Coordinator
+    ) {
+        guard let annotation = coordinator.currentAnnotations.first(
+            where: { $0.violationItem.id == violationID }
+        ) else { return }
+
+        if let page = annotation.page {
+            let destination = PDFDestination(page: page, at: CGPoint(
+                x: annotation.bounds.midX,
+                y: annotation.bounds.midY
+            ))
+            pdfView.go(to: destination)
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -140,6 +227,15 @@ struct PDFViewRepresentable: NSViewRepresentable {
         var isUpdating: Bool = false
         var lastSearchText: String = ""
         weak var pdfView: PDFView?
+
+        /// Tracks currently added violation annotations for removal on update.
+        var currentAnnotations: [ViolationAnnotation] = []
+
+        /// Tracks the last known highlight toggle state.
+        var lastShowHighlights: Bool = false
+
+        /// Tracks the last selected violation ID to avoid redundant scrolling.
+        var lastSelectedViolationID: String?
 
         init(parent: PDFViewRepresentable) {
             self.parent = parent
@@ -167,6 +263,15 @@ struct PDFViewRepresentable: NSViewRepresentable {
             if abs(parent.documentModel.zoomLevel - newScale) > tolerance {
                 parent.documentModel.zoomLevel = newScale
             }
+        }
+
+        /// Handles annotation clicks in the PDF view. When a user clicks on a
+        /// ViolationAnnotation, this notifies the parent to select it in the list.
+        @objc func annotationClicked(_ notification: Notification) {
+            guard let annotation = notification.userInfo?["PDFAnnotationHit"] as? ViolationAnnotation else {
+                return
+            }
+            parent.onAnnotationClicked?(annotation.violationItem)
         }
     }
 }

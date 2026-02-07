@@ -7,6 +7,7 @@
 
 import Foundation
 import PDFKit
+import UniformTypeIdentifiers
 
 /// Central view model coordinating document state and validation orchestration.
 ///
@@ -38,6 +39,9 @@ final class DocumentViewModel {
 
     /// Whether to automatically run validation when a document is opened.
     var autoValidateOnOpen: Bool = true
+
+    /// Whether violation annotations are shown overlaid on the PDF view.
+    var showViolationHighlights: Bool = true
 
     // MARK: - Computed State (Derived from Validation Results)
 
@@ -126,5 +130,56 @@ final class DocumentViewModel {
         if let pageIndex = violation.pageIndex {
             documentModel.goToPage(pageIndex)
         }
+    }
+
+    /// Handles an annotation click in the PDF view by selecting the corresponding violation.
+    ///
+    /// This provides the PDF-to-list direction of bidirectional navigation:
+    /// clicking a violation annotation in the PDF selects it in the violations list.
+    ///
+    /// - Parameter violation: The violation item from the clicked annotation.
+    func handleAnnotationClicked(_ violation: ViolationItem) {
+        validationViewModel.selectedViolation = violation
+    }
+
+    // MARK: - Report Export
+
+    /// Exports validation results as JSON data using ReportExporter.
+    ///
+    /// - Returns: JSON data, or nil if no validation results are available.
+    func exportJSON() -> Data? {
+        guard let summary = validationSummary else { return nil }
+        let exporter = ReportExporter()
+        return exporter.exportJSON(
+            summary: summary,
+            violations: violations,
+            documentTitle: documentModel.title
+        )
+    }
+
+    /// Exports validation results as an HTML string using ReportExporter.
+    ///
+    /// - Returns: HTML string, or nil if no validation results are available.
+    func exportHTML() -> String? {
+        guard let summary = validationSummary else { return nil }
+        let exporter = ReportExporter()
+        return exporter.exportHTML(
+            summary: summary,
+            violations: violations,
+            documentTitle: documentModel.title
+        )
+    }
+
+    /// Exports validation results as a plain text string using ReportExporter.
+    ///
+    /// - Returns: Plain text string, or nil if no validation results are available.
+    func exportText() -> String? {
+        guard let summary = validationSummary else { return nil }
+        let exporter = ReportExporter()
+        return exporter.exportText(
+            summary: summary,
+            violations: violations,
+            documentTitle: documentModel.title
+        )
     }
 }

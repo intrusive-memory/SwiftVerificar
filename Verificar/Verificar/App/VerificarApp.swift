@@ -106,6 +106,14 @@ struct VerificarApp: App {
 
                 Divider()
 
+                Button(documentViewModel.showViolationHighlights ? "Hide Violation Highlights" : "Show Violation Highlights") {
+                    documentViewModel.showViolationHighlights.toggle()
+                }
+                .keyboardShortcut("h", modifiers: [.command, .shift])
+                .disabled(!documentModel.isDocumentLoaded)
+
+                Divider()
+
                 Button("Single Page") {
                     documentModel.displayMode = .singlePage
                 }
@@ -118,6 +126,41 @@ struct VerificarApp: App {
 
                 Button("Two-Up") {
                     documentModel.displayMode = .twoUpContinuous
+                }
+                .disabled(!documentModel.isDocumentLoaded)
+            }
+
+            // MARK: - File Menu (Export)
+
+            CommandGroup(after: .newItem) {
+                Divider()
+
+                Menu("Export Report") {
+                    Button("JSON...") {
+                        if let data = documentViewModel.exportJSON() {
+                            let defaultName = "\(documentModel.title)-report.json"
+                            ReportExporter.saveToFile(data: data, defaultName: defaultName, fileType: .json)
+                        }
+                    }
+                    .disabled(documentViewModel.validationSummary == nil)
+
+                    Button("HTML...") {
+                        if let html = documentViewModel.exportHTML() {
+                            let data = Data(html.utf8)
+                            let defaultName = "\(documentModel.title)-report.html"
+                            ReportExporter.saveToFile(data: data, defaultName: defaultName, fileType: .html)
+                        }
+                    }
+                    .disabled(documentViewModel.validationSummary == nil)
+
+                    Button("Text...") {
+                        if let text = documentViewModel.exportText() {
+                            let data = Data(text.utf8)
+                            let defaultName = "\(documentModel.title)-report.txt"
+                            ReportExporter.saveToFile(data: data, defaultName: defaultName, fileType: .plainText)
+                        }
+                    }
+                    .disabled(documentViewModel.validationSummary == nil)
                 }
                 .disabled(!documentModel.isDocumentLoaded)
             }
