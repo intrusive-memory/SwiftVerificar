@@ -1,23 +1,26 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 2
-- Last commit hash: a9b1b7f
+- Last completed sprint: 3
+- Last commit hash: a4cd43b
 - Build status: passing
-- Total test count: 13 (9 unit tests + 4 UI tests from template)
+- Total test count: 17 (13 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
 - Sprint 1: Project Cleanup & PDF Document Type Configuration
 - Sprint 2: PDF Document Model & File Opening
+- Sprint 3: PDFKit View Integration & Basic Rendering
 
 ## Next Sprint
-- Sprint 3: PDFKit View Integration & Basic Rendering
+- Sprint 4: Three-Column Layout Shell
 
 ## Files Created (cumulative)
 ### Sources
 - Verificar/App/VerificarApp.swift
 - Verificar/Views/ContentView.swift
+- Verificar/Views/PDF/PDFViewRepresentable.swift
+- Verificar/Views/PDF/PDFRenderView.swift
 - Verificar/Models/PDFDocumentModel.swift
 - Verificar/Info.plist (updated)
 
@@ -41,6 +44,7 @@
 ### Tests
 - VerificarTests/VerificarTests.swift (template - 1 test)
 - VerificarTests/PDFDocumentModelTests.swift (8 tests)
+- VerificarTests/PDFViewRepresentableTests.swift (4 tests)
 
 ## Notes
 ### Sprint 1
@@ -77,3 +81,27 @@
   - initialState, goToPageClamping, nextAndPreviousPage, pageCountReflectsDocument
   - currentPageReturnsCorrectPage, closeResetsState, titleFromFilename, goToPageNoDocument
   - Tests use programmatically created in-memory PDFDocuments (no test file dependencies)
+
+### Sprint 3
+- Created PDFViewRepresentable (NSViewRepresentable wrapping PDFKit.PDFView)
+  - Configures PDFView: autoScales=true, displayMode=.singlePageContinuous, displayDirection=.vertical
+  - Coordinator pattern with PDFViewDelegate for page-change notifications
+  - Observes .PDFViewPageChanged notification to sync currentPageIndex back to model
+  - updateNSView assigns document only when reference changes (identity check with !==)
+  - Syncs model's currentPage to PDFView.go(to:) when page index differs
+  - dismantleNSView removes notification observer to prevent leaks
+- Created PDFRenderView (container view wrapping PDFViewRepresentable)
+  - Shows loading overlay with ProgressView when documentModel.isLoading
+  - Shows "No Document" overlay when no document is loaded
+  - Shows PDFViewRepresentable when document is loaded and ready
+- Updated ContentView:
+  - Replaced Sprint 2 placeholder documentLoadedView with PDFRenderView
+  - PDFRenderView handles both loading and loaded states
+  - Placeholder view retained for no-document state
+  - Removed unused loadingView and documentLoadedView subviews
+- Added 4 unit tests in PDFViewRepresentableTests using Swift Testing:
+  - makeNSViewCreatesPDFView: verifies PDFView is configured with correct autoScales, displayMode, displayDirection, and delegate
+  - updateNSViewAssignsDocument: verifies PDFDocument is assigned to the PDFView after update
+  - updateNSViewSkipsSameDocument: verifies no reassignment when document reference is unchanged
+  - coordinatorUpdatesModelOnPageChange: verifies Coordinator syncs page index back to model on page change notification
+  - Tests use a _PDFViewTestContext helper to bypass NSViewRepresentable.Context creation
