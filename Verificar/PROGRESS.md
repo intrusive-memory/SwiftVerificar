@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 4
-- Last commit hash: 2915141
+- Last completed sprint: 5
+- Last commit hash: 1a2abe9
 - Build status: passing
-- Total test count: 17 (13 unit tests + 4 UI tests from template)
+- Total test count: 22 (18 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -12,9 +12,10 @@
 - Sprint 2: PDF Document Model & File Opening
 - Sprint 3: PDFKit View Integration & Basic Rendering
 - Sprint 4: Three-Column Layout Shell
+- Sprint 5: Page Thumbnails Sidebar
 
 ## Next Sprint
-- Sprint 5: Page Thumbnails Sidebar
+- Sprint 6: Document Outline Sidebar
 
 ## Files Created (cumulative)
 ### Sources
@@ -23,8 +24,10 @@
 - Verificar/Views/PDF/PDFViewRepresentable.swift
 - Verificar/Views/PDF/PDFRenderView.swift
 - Verificar/Views/Sidebar/SidebarView.swift
+- Verificar/Views/Sidebar/ThumbnailSidebarView.swift
 - Verificar/Views/Inspector/InspectorView.swift
 - Verificar/Models/PDFDocumentModel.swift
+- Verificar/Utilities/PDFKitExtensions.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -48,6 +51,7 @@
 - VerificarTests/VerificarTests.swift (template - 1 test)
 - VerificarTests/PDFDocumentModelTests.swift (8 tests)
 - VerificarTests/PDFViewRepresentableTests.swift (4 tests)
+- VerificarTests/ThumbnailSidebarTests.swift (5 tests)
 
 ## Notes
 ### Sprint 1
@@ -140,3 +144,32 @@
   - VerificarApp reads focused values via @FocusedValue to forward menu actions
 - No new tests added (Sprint 4 specifies "Build verification" only per execution plan)
 - NavigationSplitViewVisibility is a struct, not an enum — used if/else instead of switch for toggle logic
+
+### Sprint 5
+- Created ThumbnailSidebarView (Views/Sidebar/ThumbnailSidebarView.swift)
+  - ScrollViewReader + LazyVStack displays page thumbnails for the loaded PDF
+  - Each thumbnail cell: rendered page image via PDFPage.thumbnailImage(width:) + page number label
+  - Thumbnail rendered at 2x requested width for Retina quality, displayed at ~120pt wide
+  - Selected page highlighted with accent color border (3pt) and enhanced shadow
+  - Click thumbnail calls documentModel.goToPage(_:) to update currentPageIndex
+  - Auto-scroll to current page via .onChange(of: documentModel.currentPageIndex) with smooth animation
+  - Also scrolls to current page on .onAppear for initial positioning
+  - Fallback placeholder for pages that fail to render (doc icon in gray rectangle)
+  - Empty state view when no document is loaded
+  - Full accessibility support: each thumbnail has accessibilityLabel and isSelected trait
+- Created PDFKitExtensions (Utilities/PDFKitExtensions.swift)
+  - PDFPage.thumbnailImage(width:) — generates thumbnail at given width preserving aspect ratio
+    - Uses page mediaBox bounds to compute correct aspect ratio
+    - Returns empty NSImage if page has zero-size bounds (defensive)
+    - Calls PDFPage.thumbnail(of:for:) with computed size
+  - PDFDocument.allPages — returns [PDFPage] array of all pages in document order
+  - PDFDocument.indexedPages — returns [(index: Int, page: PDFPage)] tuples for iteration
+- Updated SidebarView (Views/Sidebar/SidebarView.swift)
+  - Replaced thumbnailsPlaceholder with ThumbnailSidebarView() in the Thumbnails tab
+  - ThumbnailSidebarView handles its own empty state when no document is loaded
+- Added 5 unit tests in ThumbnailSidebarTests using Swift Testing:
+  - thumbnailImageGeneratesCorrectSize: verifies PDFPage.thumbnailImage returns non-zero-sized image
+  - allPagesReturnsCorrectCount: verifies PDFDocument.allPages returns all pages in order with identity checks
+  - indexedPagesReturnsCorrectPairs: verifies index-page tuples have correct indices
+  - pageSelectionUpdatesModel: verifies goToPage updates currentPageIndex and clamps out-of-bounds values
+  - emptyDocumentThumbnail: verifies empty document produces empty allPages and indexedPages arrays

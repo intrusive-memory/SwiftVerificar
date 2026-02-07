@@ -46,33 +46,10 @@ struct SidebarView: View {
     private var modeContent: some View {
         switch sidebarMode {
         case .thumbnails:
-            thumbnailsPlaceholder
+            ThumbnailSidebarView()
         case .outline:
             outlinePlaceholder
         }
-    }
-
-    private var thumbnailsPlaceholder: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "rectangle.grid.1x2")
-                .font(.system(size: 36))
-                .foregroundStyle(.secondary)
-
-            Text("Page Thumbnails")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-
-            if documentModel.isDocumentLoaded {
-                Text("\(documentModel.pageCount) pages")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            } else {
-                Text("Open a PDF to view thumbnails.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var outlinePlaceholder: some View {
