@@ -16,6 +16,7 @@ struct VerificarApp: App {
     @State private var isFileImporterPresented = false
     @State private var isGoToPagePresented = false
     @State private var goToPageText = ""
+    @State private var validationErrorAlert = false
 
     /// Tracks the current ContentView for forwarding toggle commands.
     /// NavigationSplitView sidebar visibility and inspector state are owned
@@ -23,6 +24,8 @@ struct VerificarApp: App {
     /// We use FocusedValues to bridge the gap.
     @FocusedValue(\.toggleSidebarAction) private var toggleSidebar
     @FocusedValue(\.toggleInspectorAction) private var toggleInspector
+    @FocusedValue(\.toggleValidationPanelAction) private var toggleValidationPanel
+    @FocusedValue(\.exportReportAction) private var exportReport
 
     /// Convenience accessor for the PDF document model owned by the view model.
     private var documentModel: PDFDocumentModel {
@@ -36,6 +39,8 @@ struct VerificarApp: App {
                 .environment(documentViewModel.documentModel)
                 .environment(documentViewModel.validationService)
                 .environment(documentViewModel.validationViewModel)
+                .navigationTitle(windowTitle)
+                .navigationSubtitle(windowSubtitle)
                 .fileImporter(
                     isPresented: $isFileImporterPresented,
                     allowedContentTypes: [UTType.pdf],
@@ -48,6 +53,18 @@ struct VerificarApp: App {
                 }
                 .sheet(isPresented: $isGoToPagePresented) {
                     goToPageSheet
+                }
+                .alert("Validation Error", isPresented: $validationErrorAlert) {
+                    Button("OK") {
+                        validationErrorAlert = false
+                    }
+                } message: {
+                    Text(documentViewModel.validationService.error?.localizedDescription ?? "An unknown error occurred during validation.")
+                }
+                .onChange(of: documentViewModel.validationService.error != nil) { _, hasError in
+                    if hasError {
+                        validationErrorAlert = true
+                    }
                 }
         }
         .commands {
@@ -175,6 +192,23 @@ struct VerificarApp: App {
                 .disabled(!documentModel.isDocumentLoaded)
             }
 
+            // MARK: - Validation Shortcuts
+
+            CommandGroup(after: .pasteboard) {
+                Divider()
+
+                Button("Toggle Validation Panel") {
+                    toggleValidationPanel?()
+                }
+                .keyboardShortcut("v", modifiers: [.command, .shift])
+
+                Button("Export Report...") {
+                    exportReport?()
+                }
+                .keyboardShortcut("s", modifiers: [.command, .shift])
+                .disabled(documentViewModel.validationSummary == nil)
+            }
+
             // MARK: - Go Menu (Navigation)
 
             CommandMenu("Go") {
@@ -212,6 +246,48 @@ struct VerificarApp: App {
                 .disabled(!documentModel.isDocumentLoaded)
             }
         }
+
+        // MARK: - Settings Scene
+
+        Settings {
+            SettingsView()
+        }
+    }
+
+    // MARK: - Window Title
+
+    /// The window title showing the document name and compliance badge.
+    private var windowTitle: String {
+        guard documentModel.isDocumentLoaded else {
+            return "Verificar"
+        }
+        let title = documentModel.title
+        let badge: String
+        switch documentViewModel.complianceStatus {
+        case .conformant:
+            badge = " -- Conformant"
+        case .nonConformant(let errors):
+            badge = " -- \(errors) Error\(errors == 1 ? "" : "s")"
+        case .inProgress:
+            badge = " -- Validating..."
+        case .notValidated:
+            badge = ""
+        case .unknown:
+            badge = ""
+        }
+        return "\(title)\(badge)"
+    }
+
+    /// The window subtitle showing validation progress or page info.
+    private var windowSubtitle: String {
+        if documentViewModel.validationService.isValidating {
+            let percent = Int(documentViewModel.validationService.progress * 100)
+            return "Validating... \(percent)%"
+        }
+        guard documentModel.isDocumentLoaded else {
+            return ""
+        }
+        return "Page \(documentModel.currentPageIndex + 1) of \(documentModel.pageCount)"
     }
 
     // MARK: - Go To Page Sheet
@@ -335,6 +411,16 @@ struct ToggleInspectorActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
 
+/// A closure that toggles the validation panel (inspector) visibility.
+struct ToggleValidationPanelActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
+/// A closure that triggers the export report flow.
+struct ExportReportActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
 extension FocusedValues {
     var toggleSidebarAction: ToggleSidebarActionKey.Value? {
         get { self[ToggleSidebarActionKey.self] }
@@ -344,5 +430,15 @@ extension FocusedValues {
     var toggleInspectorAction: ToggleInspectorActionKey.Value? {
         get { self[ToggleInspectorActionKey.self] }
         set { self[ToggleInspectorActionKey.self] = newValue }
+    }
+
+    var toggleValidationPanelAction: ToggleValidationPanelActionKey.Value? {
+        get { self[ToggleValidationPanelActionKey.self] }
+        set { self[ToggleValidationPanelActionKey.self] = newValue }
+    }
+
+    var exportReportAction: ExportReportActionKey.Value? {
+        get { self[ExportReportActionKey.self] }
+        set { self[ExportReportActionKey.self] = newValue }
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Root three-column layout using NavigationSplitView.
 ///
@@ -54,6 +55,8 @@ struct ContentView: View {
         .frame(minWidth: 800, minHeight: 500)
         .focusedSceneValue(\.toggleSidebarAction, toggleSidebar)
         .focusedSceneValue(\.toggleInspectorAction, toggleInspector)
+        .focusedSceneValue(\.toggleValidationPanelAction, toggleInspector)
+        .focusedSceneValue(\.exportReportAction, exportReport)
     }
 
     // MARK: - Sidebar Toggle
@@ -73,6 +76,14 @@ struct ContentView: View {
     func toggleInspector() {
         withAnimation {
             isInspectorPresented.toggle()
+        }
+    }
+
+    /// Triggers the export report flow using the first available format (JSON).
+    func exportReport() {
+        if let data = documentViewModel.exportJSON() {
+            let defaultName = "\(documentViewModel.documentModel.title)-report.json"
+            ReportExporter.saveToFile(data: data, defaultName: defaultName, fileType: .json)
         }
     }
 }

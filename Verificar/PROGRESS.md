@@ -1,11 +1,11 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 15
-- Last commit hash: 86be5d7
+- Last completed sprint: 16
+- Last commit hash: 067e09e
 - Build status: passing
-- Total test count: 186 (182 unit tests + 4 UI tests from template)
-- **App status: IN PROGRESS**
+- Total test count: 234 (230 unit tests + 4 UI tests from template)
+- **App status: COMPLETE**
 
 ## Completed Sprints
 - Sprint 1: Project Cleanup & PDF Document Type Configuration
@@ -23,9 +23,10 @@
 - Sprint 13: Structure Tree Visualization
 - Sprint 14: Feature Extraction Panel
 - Sprint 15: Violation Highlighting & Report Export
+- Sprint 16: Settings, Polish & Final Tests
 
 ## Next Sprint
-- Sprint 16: Settings, Polish & Final Tests
+- (none -- all sprints complete)
 
 ## Files Created (cumulative)
 ### Sources
@@ -55,6 +56,7 @@
 - Verificar/ViewModels/FeatureViewModel.swift
 - Verificar/Views/PDF/ViolationAnnotation.swift
 - Verificar/Services/ReportExporter.swift
+- Verificar/Views/SettingsView.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -89,6 +91,8 @@
 - VerificarTests/StructureTreeViewModelTests.swift (21 tests)
 - VerificarTests/FeatureViewModelTests.swift (19 tests)
 - VerificarTests/ReportExporterTests.swift (19 tests)
+- VerificarTests/IntegrationTests.swift (8 tests)
+- VerificarTests/AccessibilityTests.swift (30 tests: 17 Accessibility + 13 Settings Helper)
 
 ## Notes
 ### Sprint 1
@@ -180,7 +184,7 @@
   - ContentView publishes toggleSidebar/toggleInspector via .focusedSceneValue
   - VerificarApp reads focused values via @FocusedValue to forward menu actions
 - No new tests added (Sprint 4 specifies "Build verification" only per execution plan)
-- NavigationSplitViewVisibility is a struct, not an enum — used if/else instead of switch for toggle logic
+- NavigationSplitViewVisibility is a struct, not an enum -- used if/else instead of switch for toggle logic
 
 ### Sprint 5
 - Created ThumbnailSidebarView (Views/Sidebar/ThumbnailSidebarView.swift)
@@ -195,12 +199,12 @@
   - Empty state view when no document is loaded
   - Full accessibility support: each thumbnail has accessibilityLabel and isSelected trait
 - Created PDFKitExtensions (Utilities/PDFKitExtensions.swift)
-  - PDFPage.thumbnailImage(width:) — generates thumbnail at given width preserving aspect ratio
+  - PDFPage.thumbnailImage(width:) -- generates thumbnail at given width preserving aspect ratio
     - Uses page mediaBox bounds to compute correct aspect ratio
     - Returns empty NSImage if page has zero-size bounds (defensive)
     - Calls PDFPage.thumbnail(of:for:) with computed size
-  - PDFDocument.allPages — returns [PDFPage] array of all pages in document order
-  - PDFDocument.indexedPages — returns [(index: Int, page: PDFPage)] tuples for iteration
+  - PDFDocument.allPages -- returns [PDFPage] array of all pages in document order
+  - PDFDocument.indexedPages -- returns [(index: Int, page: PDFPage)] tuples for iteration
 - Updated SidebarView (Views/Sidebar/SidebarView.swift)
   - Replaced thumbnailsPlaceholder with ThumbnailSidebarView() in the Thumbnails tab
   - ThumbnailSidebarView handles its own empty state when no document is loaded
@@ -319,10 +323,10 @@
   - Central orchestrator for the document lifecycle and validation pipeline
   - Properties: selectedProfile (String, default "PDF/UA-2"), autoValidateOnOpen (Bool, default true)
   - Computed: validationSummary (from ValidationStateMapper), violations (from ValidationStateMapper), complianceStatus (derived from validation state)
-  - openDocument(at:) — cancels existing validation, clears state, opens PDF, auto-validates if enabled
-  - validate() — validates current document with selected profile, maps results to ValidationViewModel
-  - revalidate() — convenience wrapper for validate()
-  - selectViolation(_:) — sets selectedViolation on ValidationViewModel and navigates PDF to violation page
+  - openDocument(at:) -- cancels existing validation, clears state, opens PDF, auto-validates if enabled
+  - validate() -- validates current document with selected profile, maps results to ValidationViewModel
+  - revalidate() -- convenience wrapper for validate()
+  - selectViolation(_:) -- sets selectedViolation on ValidationViewModel and navigates PDF to violation page
 - Created ValidationViewModel (ViewModels/ValidationViewModel.swift)
   - @Observable class managing filtered, sorted, and grouped violation lists
   - Properties: violations, selectedViolation, filterSeverity, searchText, groupBy
@@ -629,3 +633,61 @@
   - Text export (3 tests): textExportFormatting, textExportNumberedViolations, textExportNoViolations
   - ViolationAnnotation (3 tests): annotationColorMapping, tooltipTextContainsDetails, tooltipOmitsNilWCAG
   - DocumentViewModel export (5 tests): exportJSONNilWhenNoResults, exportHTMLNilWhenNoResults, exportTextNilWhenNoResults, showHighlightsDefault, handleAnnotationClickedSetsSelection
+
+### Sprint 16
+- Created SettingsView (Views/SettingsView.swift)
+  - macOS Settings window with two tabs: Validation and Display
+  - Validation tab:
+    - Default validation profile picker (11 profiles matching StandardsPanel)
+    - Auto-validate on open toggle
+    - Max violations to display slider (50-2000, step 50)
+  - Display tab:
+    - Default zoom level slider (25%-400%, step 25%)
+    - Default view mode picker (Single Page / Continuous / Two-Up)
+    - Show page numbers in thumbnails toggle
+    - Violation highlight color picker (red, orange, yellow, blue, purple, green)
+  - All preferences persisted via @AppStorage
+  - SettingsHelper enum: testable helper with validation, clamping, and defaults
+    - availableProfiles, viewModes, highlightColors constants
+    - isValidProfile, isValidViewMode, isValidHighlightColor validators
+    - clampZoomLevel, clampMaxViolations range enforcers
+    - defaults dictionary with all default values
+- Updated VerificarApp (App/VerificarApp.swift)
+  - Added Settings { SettingsView() } scene (Cmd+, provided automatically by macOS)
+  - Added window title showing document name + compliance badge
+  - Added window subtitle showing validation progress or page info
+  - Added Cmd+Shift+V keyboard shortcut for Toggle Validation Panel
+  - Added Cmd+Shift+S keyboard shortcut for Export Report
+  - Added validation error alert with .onChange observer
+  - Added FocusedValues: ToggleValidationPanelActionKey, ExportReportActionKey
+- Updated ContentView (Views/ContentView.swift)
+  - Added exportReport() function for Cmd+Shift+S focused value bridge
+  - Publishes toggleValidationPanelAction and exportReportAction via .focusedSceneValue
+  - Added UniformTypeIdentifiers import for UTType usage
+- Added 8 integration tests in IntegrationTests.swift:
+  - fullOpenValidateDisplayPipeline: full document open -> validate -> display -> navigate pipeline
+  - revalidationWithDifferentProfiles: profile switch, clear, and re-validate
+  - exportPipelineAllFormats: export returns nil without validation results
+  - violationFilteringAndGroupingIntegration: filter by severity, group by page/severity, search
+  - documentCloseResetsAllState: verify all state resets on close
+  - annotationClickSelectsBidirectionally: PDF-to-list and list-to-PDF navigation
+  - violationHighlightToggle: toggle state persistence
+  - openInvalidDocument: error handling for bad file URLs
+- Added 30 accessibility and settings tests in AccessibilityTests.swift:
+  - Accessibility (17 tests):
+    - allSeveritiesHaveIcons, allSeveritiesHaveDistinctIcons, allSeveritiesHaveColors
+    - allComplianceStatusesHaveLabels, allComplianceStatusesHaveDistinctLabels, nonConformantLabelIncludesCount
+    - allInspectorTabsHaveLabels, allInspectorTabsHaveDistinctIds, inspectorTabCountIsFour
+    - allGroupingModesHaveLabels
+    - settingsProfilesNonEmpty, settingsViewModesNonEmpty, settingsHighlightColorsNonEmpty
+    - allSettingsProfilesAreNonEmpty, allViewModesAreNonEmpty, allHighlightColorsAreNonEmpty
+    - violationItemsHaveRequiredFields, violationSeverityFilterLabelsExist
+    - documentModelProvidesNavigationInfo, validationSummaryTextAccessible
+  - Settings Helper (13 tests):
+    - availableProfilesMatchStandardsPanel
+    - isValidProfileTrue, isValidProfileFalse
+    - isValidViewModeTrue, isValidViewModeFalse
+    - isValidHighlightColorTrue, isValidHighlightColorFalse
+    - clampZoomLevel, clampMaxViolations
+    - defaultSettingsValues
+    - viewModesCount, highlightColorsCount, availableProfilesCount
