@@ -1,8 +1,8 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 3
-- Last commit hash: a4cd43b
+- Last completed sprint: 4
+- Last commit hash: 2915141
 - Build status: passing
 - Total test count: 17 (13 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
@@ -11,9 +11,10 @@
 - Sprint 1: Project Cleanup & PDF Document Type Configuration
 - Sprint 2: PDF Document Model & File Opening
 - Sprint 3: PDFKit View Integration & Basic Rendering
+- Sprint 4: Three-Column Layout Shell
 
 ## Next Sprint
-- Sprint 4: Three-Column Layout Shell
+- Sprint 5: Page Thumbnails Sidebar
 
 ## Files Created (cumulative)
 ### Sources
@@ -21,6 +22,8 @@
 - Verificar/Views/ContentView.swift
 - Verificar/Views/PDF/PDFViewRepresentable.swift
 - Verificar/Views/PDF/PDFRenderView.swift
+- Verificar/Views/Sidebar/SidebarView.swift
+- Verificar/Views/Inspector/InspectorView.swift
 - Verificar/Models/PDFDocumentModel.swift
 - Verificar/Info.plist (updated)
 
@@ -105,3 +108,35 @@
   - updateNSViewSkipsSameDocument: verifies no reassignment when document reference is unchanged
   - coordinatorUpdatesModelOnPageChange: verifies Coordinator syncs page index back to model on page change notification
   - Tests use a _PDFViewTestContext helper to bypass NSViewRepresentable.Context creation
+
+### Sprint 4
+- Replaced single-column ContentView with NavigationSplitView three-column layout
+  - Sidebar column: SidebarView with min 180, ideal 220, max 300 width
+  - Content column: PDFRenderView with min 400 width
+  - Detail/Inspector column: InspectorView with min 280, ideal 320, max 450 width
+  - Overall window min size: 800x500
+  - @State sidebarVisibility controls sidebar show/hide via NavigationSplitViewVisibility
+  - @State isInspectorPresented controls inspector show/hide
+  - toggleSidebar() switches between .detailOnly and .all
+  - toggleInspector() toggles isInspectorPresented boolean
+- Created SidebarView (Views/Sidebar/SidebarView.swift)
+  - Segmented Picker toggles between Thumbnails and Outline modes (SidebarMode enum)
+  - Placeholder content for each mode with contextual text (loaded vs not loaded)
+  - Reads PDFDocumentModel from @Environment
+  - SidebarMode enum: .thumbnails, .outline with label and icon properties
+- Created InspectorView (Views/Inspector/InspectorView.swift)
+  - Segmented Picker toggles between four tabs (InspectorTab enum)
+  - Tabs: Standards, Violations, Structure, Features
+  - Each tab shows placeholder with icon, title, and contextual subtitle
+  - Reads PDFDocumentModel from @Environment
+  - InspectorTab enum: .standards, .violations, .structure, .features with label and icon properties
+- Added keyboard shortcuts via menu commands:
+  - Cmd+Opt+1: Toggle Sidebar
+  - Cmd+Opt+2: Toggle Inspector
+  - Menu items added under View > (after .sidebar CommandGroup)
+- FocusedValues bridge for menu-to-view communication:
+  - ToggleSidebarActionKey and ToggleInspectorActionKey FocusedValueKey types
+  - ContentView publishes toggleSidebar/toggleInspector via .focusedSceneValue
+  - VerificarApp reads focused values via @FocusedValue to forward menu actions
+- No new tests added (Sprint 4 specifies "Build verification" only per execution plan)
+- NavigationSplitViewVisibility is a struct, not an enum — used if/else instead of switch for toggle logic

@@ -7,38 +7,57 @@
 
 import SwiftUI
 
+/// Root three-column layout using NavigationSplitView.
+///
+/// - Sidebar: `SidebarView` (thumbnails / outline modes)
+/// - Content: `PDFRenderView` (PDF rendering via PDFKit)
+/// - Detail/Inspector: `InspectorView` (standards, violations, structure, features)
 struct ContentView: View {
 
     @Environment(PDFDocumentModel.self) private var documentModel
 
+    /// Controls the visibility of the sidebar column.
+    @State var sidebarVisibility: NavigationSplitViewVisibility = .automatic
+
+    /// Controls whether the inspector panel is shown.
+    @State var isInspectorPresented: Bool = true
+
     var body: some View {
-        Group {
-            if documentModel.isDocumentLoaded || documentModel.isLoading {
-                PDFRenderView(documentModel: documentModel)
-            } else {
-                placeholderView
+        NavigationSplitView(columnVisibility: $sidebarVisibility) {
+            SidebarView()
+                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 300)
+        } content: {
+            PDFRenderView(documentModel: documentModel)
+                .frame(minWidth: 400)
+        } detail: {
+            if isInspectorPresented {
+                InspectorView()
+                    .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 450)
             }
         }
-        .frame(minWidth: 600, minHeight: 400)
+        .frame(minWidth: 800, minHeight: 500)
+        .focusedSceneValue(\.toggleSidebarAction, toggleSidebar)
+        .focusedSceneValue(\.toggleInspectorAction, toggleInspector)
     }
 
-    // MARK: - Subviews
+    // MARK: - Sidebar Toggle
 
-    private var placeholderView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "doc.richtext")
-                .font(.system(size: 64))
-                .foregroundStyle(.secondary)
-
-            Text("Open a PDF to begin")
-                .font(.title2)
-                .foregroundStyle(.secondary)
-
-            Text("Use File > Open or drag a PDF file into this window.")
-                .font(.body)
-                .foregroundStyle(.tertiary)
+    /// Toggles the sidebar between visible and hidden states.
+    func toggleSidebar() {
+        withAnimation {
+            if sidebarVisibility == .detailOnly {
+                sidebarVisibility = .all
+            } else {
+                sidebarVisibility = .detailOnly
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Toggles the inspector panel visibility.
+    func toggleInspector() {
+        withAnimation {
+            isInspectorPresented.toggle()
+        }
     }
 }
 
