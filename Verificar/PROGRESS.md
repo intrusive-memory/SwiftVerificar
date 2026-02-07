@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 11
-- Last commit hash: f7b4836
+- Last completed sprint: 12
+- Last commit hash: 3e45b56
 - Build status: passing
-- Total test count: 112 (108 unit tests + 4 UI tests from template)
+- Total test count: 127 (123 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -19,9 +19,10 @@
 - Sprint 9: Validation Orchestration & State Management
 - Sprint 10: Accessibility Standards Panel
 - Sprint 11: Violations List View
+- Sprint 12: Violation Detail View
 
 ## Next Sprint
-- Sprint 12: Violation Detail View
+- Sprint 13: Structure Tree Visualization
 
 ## Files Created (cumulative)
 ### Sources
@@ -43,6 +44,7 @@
 - Verificar/ViewModels/ValidationViewModel.swift
 - Verificar/Views/Inspector/StandardsPanel.swift
 - Verificar/Views/Inspector/ViolationsListView.swift
+- Verificar/Views/Inspector/ViolationDetailView.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -73,6 +75,7 @@
 - VerificarTests/DocumentViewModelTests.swift (24 tests: 6 DocumentViewModel + 18 ValidationViewModel)
 - VerificarTests/StandardsPanelTests.swift (14 tests)
 - VerificarTests/ViolationsListViewModelTests.swift (11 tests)
+- VerificarTests/ViolationDetailTests.swift (15 tests)
 
 ## Notes
 ### Sprint 1
@@ -410,3 +413,42 @@
   - Filter labels (1 test): severityFilterLabels
   - Grouping with filters (3 tests): groupedViolationsRespectFilter, groupedViolationsRespectSearch, groupByCategoryProducesPrincipleGroups
   - Selection (1 test): selectingViolationUpdatesState
+
+### Sprint 12
+- Created ViolationDetailView (Views/Inspector/ViolationDetailView.swift)
+  - Expandable inline detail view shown when a violation is selected in the list
+  - Header section: severity badge icon + rule ID (headline) + short description (subheadline)
+  - Specification Reference section: displays specification string with doc.text icon
+  - Location section: formatted page number (1-based), object type, structure tree path
+  - WCAG Mapping section: principle, success criterion (number + name), level (A/AA/AAA)
+    - Blue-tinted background for visual distinction
+    - Full WCAG 2.1 criterion name lookup (78 criteria mapped)
+    - Level formatting adds "Level " prefix (avoids double-prefix)
+  - Details section: full description (only shown when different from message)
+  - Context section: monospaced font excerpt with gray background
+  - Remediation section: suggested fix with green-tinted background
+  - Navigate button: "Show in PDF" borderedProminent button triggers onShowInPDF callback
+  - All text fields support text selection (.textSelection(.enabled))
+  - Full accessibility support with accessibilityLabel and accessibilityElement
+  - ViolationDetailHelper: testable enum with formatting logic
+    - formatLocation(pageIndex:objectType:context:) builds readable location string
+    - wcagCriterionName(_:) maps WCAG 2.1 criterion numbers to names
+    - formatWCAGLevel(_:) adds "Level " prefix without double-prefixing
+    - formatRemediation(_:) combines remediation text with WCAG reference
+    - wcagCriterionMap: complete WCAG 2.1 dictionary (78 criteria across 4 principles)
+  - Preview providers for full and minimal violation states
+- Updated ViolationsListView (Views/Inspector/ViolationsListView.swift)
+  - Added @State expandedViolationID: String? for inline disclosure tracking
+  - Replaced direct onTapGesture with violationCell(_:valVM:) method
+  - violationCell renders ViolationRow + conditional ViolationDetailView
+  - Tap toggles expansion with easeInOut animation (0.2s)
+  - Expanded cell has lighter accent background (0.08 opacity)
+  - "Show in PDF" button in detail calls documentViewModel.selectViolation(_:)
+  - ViolationRow updated with isExpanded parameter for disclosure chevron
+    - Shows chevron.right (collapsed) or chevron.down (expanded)
+    - Accessibility label includes "expanded" / "collapsed" state
+- Added 15 unit tests in ViolationDetailTests using Swift Testing:
+  - WCAG criterion formatting (5 tests): knownWCAGCriterionName, unknownWCAGCriterionName, wcagLevelFormatting, wcagLevelNoDoublePrefix, allPrinciplesHaveCriteria
+  - Remediation text generation (4 tests): formatRemediationWithWCAG, formatRemediationNilWhenNoRemediation, formatRemediationWithoutWCAG, formatRemediationWithUnknownCriterion
+  - Location formatting (4 tests): formatLocationFull, formatLocationPageOnly, formatLocationNoPage, formatLocationObjectTypeNoPage
+  - WCAG criterion map coverage (2 tests): wcagCriterionMapCount, wcagCriterionMapValuesNonEmpty

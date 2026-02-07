@@ -12,12 +12,16 @@ import SwiftUI
 /// Displays violations from the current validation run, organized by the user's
 /// selected grouping mode. Supports severity filtering via a segmented control,
 /// text search, and context menus for copying violation details and changing
-/// grouping modes. Clicking a violation navigates the PDF to that page.
+/// grouping modes. Clicking a violation expands its detail view inline; the
+/// "Show in PDF" button navigates the PDF to the violation page.
 struct ViolationsListView: View {
 
     @Environment(DocumentViewModel.self) private var documentViewModel
     @Environment(ValidationService.self) private var validationService
     @Environment(PDFDocumentModel.self) private var documentModel
+
+    /// Tracks which violation is expanded for inline detail display.
+    @State private var expandedViolationID: String?
 
     var body: some View {
         @Bindable var valVM = documentViewModel.validationViewModel
@@ -144,19 +148,7 @@ struct ViolationsListView: View {
             ForEach(valVM.groupedViolations, id: \.0) { groupLabel, violations in
                 Section {
                     ForEach(violations) { violation in
-                        ViolationRow(violation: violation)
-                            .contentShape(Rectangle())
-                            .listRowBackground(
-                                valVM.selectedViolation?.id == violation.id
-                                    ? Color.accentColor.opacity(0.15)
-                                    : Color.clear
-                            )
-                            .onTapGesture {
-                                documentViewModel.selectViolation(violation)
-                            }
-                            .contextMenu {
-                                violationContextMenu(for: violation)
-                            }
+                        violationCell(violation, valVM: valVM)
                     }
                 } header: {
                     Text(groupLabel)
@@ -170,6 +162,52 @@ struct ViolationsListView: View {
         .listStyle(.plain)
         .contextMenu {
             groupByContextMenu
+        }
+    }
+
+    /// A single violation cell with inline disclosure expansion.
+    ///
+    /// Tapping toggles the inline detail view. The detail view contains
+    /// full violation information and a "Show in PDF" button.
+    @ViewBuilder
+    private func violationCell(_ violation: ViolationItem, valVM: ValidationViewModel) -> some View {
+        let isExpanded = expandedViolationID == violation.id
+
+        VStack(alignment: .leading, spacing: 0) {
+            ViolationRow(violation: violation, isExpanded: isExpanded)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        if expandedViolationID == violation.id {
+                            expandedViolationID = nil
+                            documentViewModel.validationViewModel.selectedViolation = nil
+                        } else {
+                            expandedViolationID = violation.id
+                            documentViewModel.validationViewModel.selectedViolation = violation
+                        }
+                    }
+                }
+
+            if isExpanded {
+                ViolationDetailView(
+                    violation: violation,
+                    onShowInPDF: {
+                        documentViewModel.selectViolation(violation)
+                    }
+                )
+                .padding(.top, 6)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .listRowBackground(
+            isExpanded
+                ? Color.accentColor.opacity(0.08)
+                : (valVM.selectedViolation?.id == violation.id
+                    ? Color.accentColor.opacity(0.15)
+                    : Color.clear)
+        )
+        .contextMenu {
+            violationContextMenu(for: violation)
         }
     }
 
@@ -311,13 +349,21 @@ struct ViolationsListView: View {
 // MARK: - ViolationRow
 
 /// A single row in the violations list showing severity icon, rule ID, message,
-/// page number badge, and WCAG criterion tag.
+/// page number badge, WCAG criterion tag, and a disclosure chevron indicating
+/// whether the inline detail view is expanded.
 private struct ViolationRow: View {
 
     let violation: ViolationItem
+    var isExpanded: Bool = false
 
     var body: some View {
         HStack(spacing: 8) {
+            // Disclosure chevron
+            Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .frame(width: 10)
+
             // Severity icon
             Image(systemName: violation.severity.icon)
                 .foregroundStyle(violation.severity.color)
@@ -375,6 +421,7 @@ private struct ViolationRow: View {
         .accessibilityLabel(
             "\(violation.severity.rawValue): \(violation.ruleID), \(violation.message)"
             + (violation.pageIndex.map { ", page \($0 + 1)" } ?? "")
+            + (isExpanded ? ", expanded" : ", collapsed")
         )
     }
 }
