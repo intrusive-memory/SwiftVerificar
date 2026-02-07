@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 7
-- Last commit hash: 5c6a1f3
+- Last completed sprint: 8
+- Last commit hash: 0031239
 - Build status: passing
-- Total test count: 48 (44 unit tests + 4 UI tests from template)
+- Total test count: 63 (59 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -15,9 +15,10 @@
 - Sprint 5: Page Thumbnails Sidebar
 - Sprint 6: Document Outline Sidebar
 - Sprint 7: Toolbar & Navigation Controls
+- Sprint 8: SwiftVerificar Package Dependency & Validation Service
 
 ## Next Sprint
-- Sprint 8: SwiftVerificar Package Dependency & Validation Service
+- Sprint 9: Validation Orchestration & State Management
 
 ## Files Created (cumulative)
 ### Sources
@@ -33,6 +34,8 @@
 - Verificar/Views/Sidebar/OutlineSidebarView.swift
 - Verificar/Views/Toolbar/ToolbarContent.swift
 - Verificar/Utilities/PDFKitExtensions.swift
+- Verificar/Services/ValidationService.swift
+- Verificar/Models/ValidationState.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created

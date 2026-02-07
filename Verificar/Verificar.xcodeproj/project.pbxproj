@@ -125,6 +125,7 @@
 			);
 			name = Verificar;
 			packageProductDependencies = (
+				D6A928022F3794ED00EB792D /* SwiftVerificarBiblioteca */,
 			);
 			productName = Verificar;
 			productReference = D60928D22F3794EC00EB792D /* Verificar.app */;
@@ -210,6 +211,9 @@
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D60928D32F3794EC00EB792D /* Products */;
+			packageReferences = (
+				D6A928012F3794ED00EB792D /* XCRemoteSwiftPackageReference "SwiftVerificar-biblioteca" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -634,6 +638,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D6A928012F3794ED00EB792D /* XCRemoteSwiftPackageReference "SwiftVerificar-biblioteca" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/intrusive-memory/SwiftVerificar-biblioteca.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D6A928022F3794ED00EB792D /* SwiftVerificarBiblioteca */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6A928012F3794ED00EB792D /* XCRemoteSwiftPackageReference "SwiftVerificar-biblioteca" */;
+			productName = SwiftVerificarBiblioteca;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D60928CA2F3794EC00EB792D /* Project object */;
 }

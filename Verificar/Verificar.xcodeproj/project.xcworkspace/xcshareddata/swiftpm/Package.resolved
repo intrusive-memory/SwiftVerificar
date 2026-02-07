@@ -1,0 +1,51 @@
+{
+  "originHash" : "e4bbaf855d232af9bc635a94288d79aeabc5bb14f9d2e19dee640a335ed1f1a7",
+  "pins" : [
+    {
+      "identity" : "swiftverificar-biblioteca",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/intrusive-memory/SwiftVerificar-biblioteca.git",
+      "state" : {
+        "revision" : "e876d156ab4ebcb323b2a2e28a0d166290cd07ab",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swiftverificar-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/intrusive-memory/SwiftVerificar-parser.git",
+      "state" : {
+        "revision" : "9187e586b51e65937cd84d6d474c305c0c6ff46b",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swiftverificar-validation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/intrusive-memory/SwiftVerificar-validation.git",
+      "state" : {
+        "revision" : "c8983ecd7e7c1f9e2e0b4e602e2dbaf76afc4394",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swiftverificar-validation-profiles",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/intrusive-memory/SwiftVerificar-validation-profiles.git",
+      "state" : {
+        "revision" : "04195449be7c590cc0ef138f9c5ef555d3784e6d",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swiftverificar-wcag-algs",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/intrusive-memory/SwiftVerificar-wcag-algs.git",
+      "state" : {
+        "revision" : "cd301b61b2ce7de4880c2254e12c974ce1684c58",
+        "version" : "0.1.0"
+      }
+    }
+  ],
+  "version" : 3
+}
