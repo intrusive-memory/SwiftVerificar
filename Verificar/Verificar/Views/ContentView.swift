@@ -12,8 +12,13 @@ import SwiftUI
 /// - Sidebar: `SidebarView` (thumbnails / outline modes)
 /// - Content: `PDFRenderView` (PDF rendering via PDFKit)
 /// - Detail/Inspector: `InspectorView` (standards, violations, structure, features)
+///
+/// Since Sprint 9, the view pulls `DocumentViewModel` from the environment,
+/// which owns the `PDFDocumentModel`, `ValidationService`, and `ValidationViewModel`.
+/// These are also injected into the environment individually for child views.
 struct ContentView: View {
 
+    @Environment(DocumentViewModel.self) private var documentViewModel
     @Environment(PDFDocumentModel.self) private var documentModel
 
     /// Controls the visibility of the sidebar column.
@@ -66,5 +71,8 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environment(DocumentViewModel())
         .environment(PDFDocumentModel())
+        .environment(ValidationService())
+        .environment(ValidationViewModel())
 }

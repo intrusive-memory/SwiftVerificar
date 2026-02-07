@@ -12,7 +12,7 @@ import PDFKit
 @main
 struct VerificarApp: App {
 
-    @State private var documentModel = PDFDocumentModel()
+    @State private var documentViewModel = DocumentViewModel()
     @State private var isFileImporterPresented = false
     @State private var isGoToPagePresented = false
     @State private var goToPageText = ""
@@ -24,10 +24,18 @@ struct VerificarApp: App {
     @FocusedValue(\.toggleSidebarAction) private var toggleSidebar
     @FocusedValue(\.toggleInspectorAction) private var toggleInspector
 
+    /// Convenience accessor for the PDF document model owned by the view model.
+    private var documentModel: PDFDocumentModel {
+        documentViewModel.documentModel
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(documentModel)
+                .environment(documentViewModel)
+                .environment(documentViewModel.documentModel)
+                .environment(documentViewModel.validationService)
+                .environment(documentViewModel.validationViewModel)
                 .fileImporter(
                     isPresented: $isFileImporterPresented,
                     allowedContentTypes: [UTType.pdf],
@@ -256,6 +264,8 @@ struct VerificarApp: App {
         return false
     }
 
+    /// Opens a PDF document via the DocumentViewModel, which handles
+    /// both PDF loading and automatic validation triggering.
     private func openDocument(at url: URL) {
         Task {
             // Start accessing security-scoped resource for sandboxed apps
@@ -265,7 +275,7 @@ struct VerificarApp: App {
                     url.stopAccessingSecurityScopedResource()
                 }
             }
-            try await documentModel.open(url: url)
+            await documentViewModel.openDocument(at: url)
         }
     }
 }

@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 8
-- Last commit hash: 0031239
+- Last completed sprint: 9
+- Last commit hash: 136b620
 - Build status: passing
-- Total test count: 63 (59 unit tests + 4 UI tests from template)
+- Total test count: 87 (83 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -16,9 +16,10 @@
 - Sprint 6: Document Outline Sidebar
 - Sprint 7: Toolbar & Navigation Controls
 - Sprint 8: SwiftVerificar Package Dependency & Validation Service
+- Sprint 9: Validation Orchestration & State Management
 
 ## Next Sprint
-- Sprint 9: Validation Orchestration & State Management
+- Sprint 10: Accessibility Standards Panel
 
 ## Files Created (cumulative)
 ### Sources
@@ -36,6 +37,8 @@
 - Verificar/Utilities/PDFKitExtensions.swift
 - Verificar/Services/ValidationService.swift
 - Verificar/Models/ValidationState.swift
+- Verificar/ViewModels/DocumentViewModel.swift
+- Verificar/ViewModels/ValidationViewModel.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -62,6 +65,8 @@
 - VerificarTests/ThumbnailSidebarTests.swift (5 tests)
 - VerificarTests/OutlineNodeTests.swift (8 tests)
 - VerificarTests/ToolbarTests.swift (18 tests)
+- VerificarTests/ValidationServiceTests.swift (15 tests)
+- VerificarTests/DocumentViewModelTests.swift (24 tests: 6 DocumentViewModel + 18 ValidationViewModel)
 
 ## Notes
 ### Sprint 1
@@ -257,3 +262,80 @@
   - Search tests: searchSetsText, clearSearchResetsState, searchWithEmptyStringClears
   - Integration tests: closeResetsNewProperties
   - ViewModeOption tests: viewModeOptionMapping, viewModeOptionFromDisplayMode
+
+### Sprint 8
+- Added SwiftVerificar-biblioteca as SPM dependency
+  - XCRemoteSwiftPackageReference for https://github.com/intrusive-memory/SwiftVerificar-biblioteca.git v0.1.0
+  - XCSwiftPackageProductDependency for SwiftVerificarBiblioteca linked to Verificar target
+  - Package dependency resolved successfully with all transitive dependencies (parser, validation, validation-profiles, wcag-algs)
+- Created ValidationService (Services/ValidationService.swift)
+  - @Observable class wrapping SwiftVerificar.shared for UI-observable validation state
+  - Properties: isValidating (Bool), progress (Double 0-1), lastResult (ValidationResult?), error (Error?)
+  - validate(url:) delegates to validate(url:profile:) with default "PDF/UA-2"
+  - validate(url:profile:) runs validation via Task, reports progress, handles errors
+  - extractFeatures(url:) uses ProcessorConfig with .extractFeatures task
+  - cancelValidation() cancels in-flight task and resets isValidating
+  - @unchecked Sendable due to @Observable macro requirements
+- Created ValidationState models (Models/ValidationState.swift)
+  - ValidationSummary: aggregated summary with passRate, complianceStatus computed properties
+  - ViolationItem: Identifiable, Sendable, Equatable with full WCAG/specification metadata
+  - ViolationSeverity: error/warning/info with icon (SF Symbol) and color (SwiftUI Color)
+  - ComplianceStatus: conformant/nonConformant(errors:)/unknown/inProgress/notValidated with label, icon, color
+  - ValidationStateMapper: maps biblioteca types to UI models
+    - makeSummary(from:) maps ValidationResult to ValidationSummary
+    - makeViolations(from:) maps failed/unknown assertions to ViolationItem array
+    - Maps assertion.status == .failed to .error severity, .unknown to .warning
+    - Converts 1-based page numbers to 0-based page indices
+- Added 15 unit tests in ValidationServiceTests using Swift Testing:
+  - ValidationService: serviceInitializesWithDefaultState, cancelSetsIsValidatingToFalse, validateSetsErrorForStubImplementation, validateResetsStateBeforeStarting
+  - ValidationState Models: violationSeverityIcons, violationSeverityAllCases, complianceStatusLabels, complianceStatusEquality, validationSummaryPassRate, validationSummaryPassRateZeroTotal, validationSummaryConformant, validationSummaryNonConformant
+  - ValidationStateMapper: mapperCreatesSummary, mapperCreatesViolations, mapperHandlesEmptyResult
+
+### Sprint 9
+- Created DocumentViewModel (ViewModels/DocumentViewModel.swift)
+  - @Observable class that owns PDFDocumentModel, ValidationService, and ValidationViewModel
+  - Central orchestrator for the document lifecycle and validation pipeline
+  - Properties: selectedProfile (String, default "PDF/UA-2"), autoValidateOnOpen (Bool, default true)
+  - Computed: validationSummary (from ValidationStateMapper), violations (from ValidationStateMapper), complianceStatus (derived from validation state)
+  - openDocument(at:) — cancels existing validation, clears state, opens PDF, auto-validates if enabled
+  - validate() — validates current document with selected profile, maps results to ValidationViewModel
+  - revalidate() — convenience wrapper for validate()
+  - selectViolation(_:) — sets selectedViolation on ValidationViewModel and navigates PDF to violation page
+- Created ValidationViewModel (ViewModels/ValidationViewModel.swift)
+  - @Observable class managing filtered, sorted, and grouped violation lists
+  - Properties: violations, selectedViolation, filterSeverity, searchText, groupBy
+  - GroupingMode enum: .none, .severity, .category, .page (CaseIterable, Identifiable)
+  - filteredViolations computed property: combines severity filter + text search (case-insensitive)
+  - groupedViolations computed property: groups filtered violations by selected mode
+  - Severity counts: errorCount, warningCount, infoCount
+  - summaryText computed property: e.g. "4 violations (2 errors, 1 warning, 1 info)"
+  - updateViolations(_:) replaces violations and clears selection
+  - clearViolations() resets all state including filters
+  - Grouping helpers: groupBySeverity, groupByCategory, groupByPage (with numeric sort)
+- Updated VerificarApp (App/VerificarApp.swift)
+  - Replaced @State PDFDocumentModel with @State DocumentViewModel
+  - Added convenience documentModel property for menu command access
+  - Injects DocumentViewModel, PDFDocumentModel, ValidationService, and ValidationViewModel into environment
+  - openDocument(at:) now delegates to documentViewModel.openDocument(at:) which triggers auto-validation
+  - File importer and drag-and-drop handlers unchanged but route through DocumentViewModel
+- Updated ContentView (Views/ContentView.swift)
+  - Added @Environment(DocumentViewModel.self) for parent view model access
+  - Retains @Environment(PDFDocumentModel.self) for sidebar, toolbar, and PDF rendering
+  - Updated preview to inject all four environment objects
+- Updated InspectorView (Views/Inspector/InspectorView.swift)
+  - Now reads DocumentViewModel, ValidationService, and PDFDocumentModel from environment
+  - Shows linear ProgressView with percentage when validationService.isValidating
+  - Standards tab: shows compliance badge + summary stats when results available
+    - Displays complianceStatus icon/label, profile name, passed/failed/warning stat badges
+    - Shows "Validation Error" state when service has error
+    - Shows "Not Validated" when document loaded but not yet validated
+    - Shows "Open a PDF" when no document loaded
+  - Violations tab: shows summary text + scrollable violation list when results available
+    - Each row: severity icon, rule ID, message, page number
+    - Tap violation calls documentViewModel.selectViolation(_:) to navigate PDF
+    - Shows "No Violations" when validation ran but found none
+    - Shows "Not Validated" / "Open a PDF" for appropriate empty states
+  - Structure and Features tabs retain previous placeholder content
+- Added 24 unit tests in DocumentViewModelTests using Swift Testing:
+  - DocumentViewModel (6 tests): initialState, complianceStatusNotValidated, selectViolationNavigates, selectViolationNilPage, openDocumentFailure, openDocumentClearsPreviousState
+  - ValidationViewModel (18 tests): filterBySeverityError, filterBySeverityWarning, filterBySeverityInfo, noFilterReturnsAll, searchByMessage, searchByRuleID, searchCaseInsensitive, combinedFilterAndSearch, emptySearchReturnsAll, groupBySeverity, groupByPage, groupByNone, summaryText, summaryTextEmpty, updateViolationsReplacesAndClearsSelection, clearViolationsResetsEverything, groupingModeCases, severityCounts
