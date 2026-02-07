@@ -11,7 +11,8 @@ import SwiftUI
 /// Standards, Violations, Structure, and Features.
 ///
 /// Shows validation progress when a validation is in progress, and contextual
-/// placeholder content when no results are available.
+/// placeholder content when no results are available. The Violations tab displays
+/// a badge with the error count when violations are present.
 struct InspectorView: View {
 
     @Environment(PDFDocumentModel.self) private var documentModel
@@ -38,15 +39,51 @@ struct InspectorView: View {
     // MARK: - Tab Bar
 
     private var tabBar: some View {
-        Picker("Inspector Tab", selection: $selectedTab) {
+        HStack(spacing: 0) {
             ForEach(InspectorTab.allCases) { tab in
-                Label(tab.label, systemImage: tab.icon)
-                    .tag(tab)
+                tabButton(for: tab)
             }
         }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .padding(8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+    }
+
+    private func tabButton(for tab: InspectorTab) -> some View {
+        Button {
+            selectedTab = tab
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: tab.icon)
+                    .font(.caption2)
+                Text(tab.label)
+                    .font(.caption2)
+                // Badge for violations tab
+                if tab == .violations {
+                    let errorCount = documentViewModel.validationViewModel.errorCount
+                    if errorCount > 0 {
+                        Text("\(errorCount)")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(.red, in: Capsule())
+                    }
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity)
+            .background(
+                selectedTab == tab
+                    ? Color.accentColor.opacity(0.15)
+                    : Color.clear,
+                in: RoundedRectangle(cornerRadius: 6)
+            )
+            .foregroundStyle(selectedTab == tab ? .primary : .secondary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(tab.label)
+        .accessibilityAddTraits(selectedTab == tab ? .isSelected : [])
     }
 
     // MARK: - Validation Progress
@@ -71,7 +108,7 @@ struct InspectorView: View {
         case .standards:
             StandardsPanel()
         case .violations:
-            violationsTabContent
+            ViolationsListView()
         case .structure:
             tabPlaceholder(
                 icon: "list.bullet.rectangle",
@@ -87,80 +124,6 @@ struct InspectorView: View {
                 subtitle: documentModel.isDocumentLoaded
                     ? "Font, image, and annotation details will appear here."
                     : "Open a PDF to extract features."
-            )
-        }
-    }
-
-    // MARK: - Violations Tab Content
-
-    @ViewBuilder
-    private var violationsTabContent: some View {
-        if validationService.isValidating {
-            tabPlaceholder(
-                icon: "hourglass",
-                title: "Validating...",
-                subtitle: "Checking for violations..."
-            )
-        } else if !documentViewModel.violations.isEmpty {
-            // Brief violations summary while we build the full list view in Sprint 11
-            VStack(spacing: 8) {
-                Text(documentViewModel.validationViewModel.summaryText)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 12)
-
-                Divider()
-                    .padding(.horizontal)
-
-                List(documentViewModel.violations, id: \.id) { violation in
-                    HStack(spacing: 8) {
-                        Image(systemName: violation.severity.icon)
-                            .foregroundStyle(violation.severity.color)
-                            .font(.caption)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(violation.ruleID)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                            Text(violation.message)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-
-                        Spacer()
-
-                        if let page = violation.pageIndex {
-                            Text("p.\(page + 1)")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        documentViewModel.selectViolation(violation)
-                    }
-                }
-                .listStyle(.plain)
-            }
-        } else if validationService.lastResult != nil {
-            // Validation ran but no violations
-            tabPlaceholder(
-                icon: "checkmark.circle",
-                title: "No Violations",
-                subtitle: "No violations were found."
-            )
-        } else if !documentModel.isDocumentLoaded {
-            tabPlaceholder(
-                icon: "exclamationmark.triangle",
-                title: "Violations",
-                subtitle: "Open a PDF to check for violations."
-            )
-        } else {
-            tabPlaceholder(
-                icon: "exclamationmark.triangle",
-                title: "Not Validated",
-                subtitle: "Run validation to see violations."
             )
         }
     }

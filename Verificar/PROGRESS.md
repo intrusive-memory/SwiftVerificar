@@ -1,10 +1,10 @@
 # Verificar Progress
 
 ## Current State
-- Last completed sprint: 10
-- Last commit hash: 2192ee3
+- Last completed sprint: 11
+- Last commit hash: f7b4836
 - Build status: passing
-- Total test count: 101 (97 unit tests + 4 UI tests from template)
+- Total test count: 112 (108 unit tests + 4 UI tests from template)
 - **App status: IN PROGRESS**
 
 ## Completed Sprints
@@ -18,9 +18,10 @@
 - Sprint 8: SwiftVerificar Package Dependency & Validation Service
 - Sprint 9: Validation Orchestration & State Management
 - Sprint 10: Accessibility Standards Panel
+- Sprint 11: Violations List View
 
 ## Next Sprint
-- Sprint 11: Violations List View
+- Sprint 12: Violation Detail View
 
 ## Files Created (cumulative)
 ### Sources
@@ -41,6 +42,7 @@
 - Verificar/ViewModels/DocumentViewModel.swift
 - Verificar/ViewModels/ValidationViewModel.swift
 - Verificar/Views/Inspector/StandardsPanel.swift
+- Verificar/Views/Inspector/ViolationsListView.swift
 - Verificar/Info.plist (updated)
 
 ### Directories Created
@@ -70,6 +72,7 @@
 - VerificarTests/ValidationServiceTests.swift (15 tests)
 - VerificarTests/DocumentViewModelTests.swift (24 tests: 6 DocumentViewModel + 18 ValidationViewModel)
 - VerificarTests/StandardsPanelTests.swift (14 tests)
+- VerificarTests/ViolationsListViewModelTests.swift (11 tests)
 
 ## Notes
 ### Sprint 1
@@ -378,3 +381,32 @@
   - Standards identification (4 tests): pdfAIdentificationForPDFAProfile, pdfAIdentificationForNonPDFAProfile, pdfUAIdentificationForPDFUAProfile, pdfUAIdentificationForNonPDFUAProfile
   - Profile list (1 test): availableProfilesContainsExpected (verifies all 11 profiles)
   - Badge state uniqueness (1 test): badgeStateRawValues (verifies all raw values are distinct)
+
+### Sprint 11
+- Created ViolationsListView (Views/Inspector/ViolationsListView.swift)
+  - Full violations list inspector tab replacing the Sprint 9 inline placeholder
+  - Filter Bar: segmented control for severity (All / Errors / Warnings / Info) + search field with clear button
+  - Summary Bar: shows summaryText from ValidationViewModel + grouping mode picker (Menu)
+  - Grouped List: groups violations by severity/category/page/none using disclosure sections
+    - Each violation row: severity icon (colored), Rule ID badge, WCAG criterion tag, message (2-line truncation), page number badge
+    - Selected violation highlighted with accent color background
+    - Click calls documentViewModel.selectViolation(_:) to navigate PDF to violation page
+  - Context Menu: Copy violation details (to pasteboard), Go to page, Group by options
+  - Empty States: validating (hourglass), no document, not validated, clean (green checkmark), no matches (magnifying glass)
+  - ViolationRow: private subview for individual violation display with full accessibility support
+  - ViolationsListHelper: testable enum with formatViolationDetails(_:) and badgeCount(from:)
+  - ViolationSeverity.filterLabel extension for segmented control labels
+  - Preview providers for "With Violations" and "Clean" states
+- Updated InspectorView (Views/Inspector/InspectorView.swift)
+  - Replaced inline violationsTabContent with ViolationsListView()
+  - Replaced segmented Picker tab bar with custom HStack button-based tab bar
+  - Added badge count on Violations tab: red capsule with error count (only shown when errorCount > 0)
+  - Tab buttons use accent color background for selected state and accessibility traits
+  - Removed all Sprint 9 violations inline view code (List, HStack rows, etc.)
+- ValidationViewModel unchanged (all filtering, grouping, and search logic was already complete from Sprint 9)
+- Added 11 unit tests in ViolationsListViewModelTests using Swift Testing:
+  - Badge count (3 tests): badgeCountReturnsErrorCount, badgeCountZeroWhenNoErrors, badgeCountZeroWhenEmpty
+  - Format details (3 tests): formatDetailsIncludesAllFields, formatDetailsOmitsNilFields, formatDetailsShowsOneBasedPage
+  - Filter labels (1 test): severityFilterLabels
+  - Grouping with filters (3 tests): groupedViolationsRespectFilter, groupedViolationsRespectSearch, groupByCategoryProducesPrincipleGroups
+  - Selection (1 test): selectingViolationUpdatesState
