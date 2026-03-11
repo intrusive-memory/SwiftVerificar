@@ -10,27 +10,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-macos:
-    name: Test on macOS
+  validate:
+    name: Validate collection
     runs-on: macos-26
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show Swift version
-        run: swift --version
+      - name: Validate collection.json
+        run: python3 -c "import json; json.load(open('collection.json'))"
 
-      - name: Build
+      - name: Verify package URLs are reachable
         run: |
-          xcodebuild build \
-            -scheme Verificar \
-            -destination 'platform=macOS' \
-            -project Verificar/Verificar.xcodeproj
-
-      - name: Test
-        run: |
-          xcodebuild test \
-            -scheme Verificar \
-            -destination 'platform=macOS' \
-            -project Verificar/Verificar.xcodeproj
+          urls=$(python3 -c "
+          import json
+          data = json.load(open('collection.json'))
+          for p in data.get('packages', []):
+              print(p['url'])
+          ")
+          for url in $urls; do
+            repo="${url%.git}"
+            echo "Checking $repo..."
+            curl -sfL -o /dev/null "$repo" || { echo "FAIL: $repo unreachable"; exit 1; }
+          done
+          echo "All package URLs reachable."
