@@ -11,8 +11,8 @@
     "verapdf"
   ],
   "formatVersion": "1.0",
-  "revision": 4,
-  "generatedAt": "2026-02-07T16:10:00Z",
+  "revision": 6,
+  "generatedAt": "2026-03-11T00:00:00Z",
   "generatedBy": {
     "name": "Intrusive Memory"
   },
@@ -28,6 +28,84 @@
       ],
       "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-biblioteca/blob/main/README.md",
       "versions": [
+        {
+          "version": "0.3.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarBiblioteca",
+              "targets": [
+                {
+                  "name": "SwiftVerificarBiblioteca",
+                  "moduleName": "SwiftVerificarBiblioteca"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarBiblioteca",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarBiblioteca"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
+        {
+          "version": "0.2.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarBiblioteca",
+              "targets": [
+                {
+                  "name": "SwiftVerificarBiblioteca",
+                  "moduleName": "SwiftVerificarBiblioteca"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarBiblioteca",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarBiblioteca"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
         {
           "version": "0.1.0",
           "manifests": {
@@ -82,6 +160,45 @@
       "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-parser/blob/main/README.md",
       "versions": [
         {
+          "version": "0.2.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarParser",
+              "targets": [
+                {
+                  "name": "SwiftVerificarParser",
+                  "moduleName": "SwiftVerificarParser"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarParser",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarParser"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
+        {
           "version": "0.1.0",
           "manifests": {
             "6.0": {
@@ -133,6 +250,45 @@
       ],
       "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-validation/blob/main/README.md",
       "versions": [
+        {
+          "version": "0.2.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarValidation",
+              "targets": [
+                {
+                  "name": "SwiftVerificarValidation",
+                  "moduleName": "SwiftVerificarValidation"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarValidation",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarValidation"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
         {
           "version": "0.1.0",
           "manifests": {
@@ -188,6 +344,45 @@
       "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-validation-profiles/blob/main/README.md",
       "versions": [
         {
+          "version": "0.2.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarValidationProfiles",
+              "targets": [
+                {
+                  "name": "SwiftVerificarValidationProfiles",
+                  "moduleName": "SwiftVerificarValidationProfiles"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarValidationProfiles",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarValidationProfiles"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
+        {
           "version": "0.1.0",
           "manifests": {
             "6.0": {
@@ -240,6 +435,45 @@
       ],
       "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-wcag-algs/blob/main/README.md",
       "versions": [
+        {
+          "version": "0.2.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarWCAGAlgs",
+              "targets": [
+                {
+                  "name": "SwiftVerificarWCAGAlgs",
+                  "moduleName": "SwiftVerificarWCAGAlgs"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarWCAGAlgs",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarWCAGAlgs"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
         {
           "version": "0.1.0",
           "manifests": {
