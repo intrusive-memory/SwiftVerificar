@@ -77,49 +77,92 @@ All packages follow the same workflow:
 
 ## Implementation Roadmap
 
+### v0.1.0 — Released (2026-02-07)
+
+All 5 packages tagged at v0.1.0 and published as GitHub releases.
+
+| Package | Types | Tests | Status |
+|---------|-------|-------|--------|
+| SwiftVerificar-parser | 67+ | 1,968 | Released |
+| SwiftVerificar-validation-profiles | 30 | 686 | Released |
+| SwiftVerificar-wcag-algs | 72+ | 1,222 | Released |
+| SwiftVerificar-validation | 190+ | 2,995 | Released |
+| SwiftVerificar-biblioteca | 55+ | 1,400 | Released |
+
+**Completed in v0.1.0:**
+- PDF document loading, COS object model, structure tree parsing
+- XMP metadata extraction
+- XML validation profile parser (PDF/A and PDF/UA profiles)
+- WCAG accessibility algorithms (contrast ratio, structure, links)
+- Validation engine scaffolding with PDF/UA-1 and PDF/UA-2 validators
+- Feature extraction panel (fonts, images, color spaces, annotations)
+- Full CI/CD on `macos-26` runners with branch protection
+
+### v0.2.0 — In Progress
+
+Scope: parser core gap fixes, validation fully wired to real parser types, and complete feature extraction coverage.
+
+| Task | Package | Status |
+|------|---------|--------|
+| Stream data reading (`ObjectParser.parseStream`) | parser | Complete |
+| Trailer dictionary parsing (`XRefParser.parseTrailerDictionary`) | parser | Complete |
+| ToUnicode CMap mapping in `PDFTextStripper` | parser | Complete |
+| Single-quote and double-quote PDF text operators | parser | Complete |
+| ICCBased color space from indirect reference streams | parser | Complete |
+| Indirect object reference resolution in arrays | parser | Complete |
+| TrueType font table parsing (cmap, head, hhea, hmtx) | parser | Complete |
+| Wire `SwiftVerificarParser` as real dependency in validation | validation | Complete |
+| XMP conformance detection (PDF/UA-1, PDF/UA-2, PDF/A-1–4) | validation | Complete |
+| PDF/UA-1 validator — all 18 stub methods implemented | validation | Complete |
+| PDF/UA-2 validator — all 24 stub methods implemented | validation | Complete |
+| Feature extraction — all 19 `FeatureType` cases handled | biblioteca | Complete |
+| Documentation update and cross-package integration verification | root | Complete |
+
+**v0.2.0 Package Versions**: All 5 packages bump to `0.2.0`.
+
 ### Phase 1: Foundation (MVP) - PDF/UA-2 Focus
 
 | Task | Package | Status |
 |------|---------|--------|
-| PDF document loading via PDFKit | parser | Pending |
-| Tagged PDF structure tree parsing | parser | Pending |
-| XMP metadata extraction | parser | Pending |
-| Validation result model | biblioteca | Pending |
+| PDF document loading via PDFKit | parser | Complete (v0.1.0) |
+| Tagged PDF structure tree parsing | parser | Complete (v0.1.0) |
+| XMP metadata extraction | parser | Complete (v0.1.0) |
+| Validation result model | biblioteca | Complete (v0.1.0) |
 
 ### Phase 2: Profile System
 
 | Task | Package | Status |
 |------|---------|--------|
-| XML validation profile parser | validation-profiles | Pending |
-| PDF/UA-2 profile import | validation-profiles | Pending |
-| Rule expression evaluator | validation | Pending |
+| XML validation profile parser | validation-profiles | Complete (v0.1.0) |
+| PDF/UA-2 profile import | validation-profiles | Complete (v0.1.0) |
+| Rule expression evaluator | validation | Complete (v0.1.0) |
 
 ### Phase 3: Core Validation Engine
 
 | Task | Package | Status |
 |------|---------|--------|
-| Structure tree validation | validation | Pending |
-| Document metadata validation | validation | Pending |
-| Tagged content validation | validation | Pending |
-| Table structure validation | validation | Pending |
+| Structure tree validation | validation | Complete (v0.2.0) |
+| Document metadata validation | validation | Complete (v0.2.0) |
+| Tagged content validation | validation | Complete (v0.2.0) |
+| Table structure validation | validation | Complete (v0.2.0) |
 
 ### Phase 4: WCAG Algorithms
 
 | Task | Package | Status |
 |------|---------|--------|
-| Contrast ratio calculation | wcag-algs | Pending |
-| Text accessibility checks | wcag-algs | Pending |
-| List structure validation | wcag-algs | Pending |
-| Link validation | wcag-algs | Pending |
+| Contrast ratio calculation | wcag-algs | Complete (v0.1.0) |
+| Text accessibility checks | wcag-algs | Complete (v0.1.0) |
+| List structure validation | wcag-algs | Complete (v0.1.0) |
+| Link validation | wcag-algs | Complete (v0.1.0) |
 
 ### Phase 5: Extended Profiles (Post-MVP)
 
 | Task | Package | Status |
 |------|---------|--------|
-| PDF/UA-1 profile | validation-profiles | Pending |
-| PDF/A-1a/1b profiles | validation-profiles | Pending |
-| PDF/A-2a/2b profiles | validation-profiles | Pending |
-| PDF/A-3a/3b profiles | validation-profiles | Pending |
+| PDF/UA-1 profile | validation-profiles | Complete (v0.1.0) |
+| PDF/A-1a/1b profiles | validation-profiles | Complete (v0.1.0) |
+| PDF/A-2a/2b profiles | validation-profiles | Complete (v0.1.0) |
+| PDF/A-3a/3b profiles | validation-profiles | Complete (v0.1.0) |
 
 ## Reference Materials
 
