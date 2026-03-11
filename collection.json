@@ -11,7 +11,7 @@
     "verapdf"
   ],
   "formatVersion": "1.0",
-  "revision": 5,
+  "revision": 6,
   "generatedAt": "2026-03-11T00:00:00Z",
   "generatedBy": {
     "name": "Intrusive Memory"
@@ -28,6 +28,45 @@
       ],
       "readmeURL": "https://github.com/intrusive-memory/SwiftVerificar-biblioteca/blob/main/README.md",
       "versions": [
+        {
+          "version": "0.3.0",
+          "manifests": {
+            "6.0": {
+              "toolsVersion": "6.0",
+              "packageName": "SwiftVerificarBiblioteca",
+              "targets": [
+                {
+                  "name": "SwiftVerificarBiblioteca",
+                  "moduleName": "SwiftVerificarBiblioteca"
+                }
+              ],
+              "products": [
+                {
+                  "name": "SwiftVerificarBiblioteca",
+                  "type": {
+                    "library": [
+                      "automatic"
+                    ]
+                  },
+                  "targets": [
+                    "SwiftVerificarBiblioteca"
+                  ]
+                }
+              ],
+              "minimumPlatformVersions": [
+                {
+                  "name": "macOS",
+                  "version": "14.0"
+                },
+                {
+                  "name": "iOS",
+                  "version": "17.0"
+                }
+              ]
+            }
+          },
+          "defaultToolsVersion": "6.0"
+        },
         {
           "version": "0.2.0",
           "manifests": {
